@@ -16,6 +16,18 @@ const App = {
   },
 
   init() {
+    // Handle Spotify OAuth popup return — if we're in a popup with an access_token
+    // hash, send it to the opener and close this window immediately.
+    if (window.opener) {
+      const hash = new URLSearchParams(window.location.hash.substring(1));
+      const token = hash.get('access_token');
+      if (token) {
+        window.opener.postMessage({ type: 'SPOTIFY_TOKEN', token }, window.location.origin);
+        window.close();
+        return;
+      }
+    }
+
     this.showView('landing');
     window.__auxdrop = this;
   },

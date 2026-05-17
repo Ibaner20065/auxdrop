@@ -7,6 +7,7 @@ import { renderQueueCarousel, updateQueueCarousel } from '../components/queue-ca
 import { renderSessionHeader } from '../components/session-header.js';
 import { renderUserBubbles, updateUserBubbles } from '../components/user-bubbles.js';
 import { openSearchModal } from '../components/search-modal.js';
+import { openSpotifyImportModal } from '../components/spotify-import.js';
 import { renderPlayerControls } from '../components/player-controls.js';
 import { openStatsModal } from '../components/stats-modal.js';
 
@@ -32,9 +33,14 @@ export async function render() {
       <section class="queue-section">
         <div class="queue-header" style="background: repeating-linear-gradient(45deg, #ffff00, #ffff00 10px, #000000 10px, #000000 20px);">
           <h2 class="queue-title" style="background:#000; color:#fff; padding:2px 6px;">Queue</h2>
-          <button class="queue-add-btn" id="btn-open-search">
-            <span>+</span> Add Song
-          </button>
+          <div style="display:flex; gap:6px;">
+            <button class="queue-add-btn" id="btn-open-search">
+              <span>+</span> Add Song
+            </button>
+            <button class="queue-add-btn" id="btn-open-spotify" style="background:#1DB954; border-color:#1DB954; color:#000;">
+              🎵 Spotify
+            </button>
+          </div>
         </div>
         <div id="queue-carousel-container"></div>
       </section>
@@ -73,6 +79,9 @@ export async function render() {
 function attachSessionEvents() {
   document.getElementById('btn-open-search')?.addEventListener('click', () => {
     openSearchModal(handleAddSong);
+  });
+  document.getElementById('btn-open-spotify')?.addEventListener('click', () => {
+    openSpotifyImportModal(handleAddSong);
   });
 }
 
