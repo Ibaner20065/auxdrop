@@ -74,9 +74,13 @@ export function openYouTubeImportModal(onAddSong) {
 
       statusEl.textContent = `Found ${tracks.length} tracks. Adding to queue...`;
       
-      // Add tracks to queue
+      let addedCount = 0;
       for (const track of tracks) {
-        onAddSong(track);
+        const result = await onAddSong(track);
+        if (result && result.error) {
+          throw new Error(result.error); // Stop on first backend error
+        }
+        addedCount++;
         // Small delay to prevent socket flooding
         await new Promise(r => setTimeout(r, 100));
       }
@@ -88,7 +92,7 @@ export function openYouTubeImportModal(onAddSong) {
         </div>
         <div class="modal-body" style="text-align:center; padding:32px;">
           <div style="font-size:2.5rem; margin-bottom:8px;">✅</div>
-          <p><strong>${tracks.length} songs</strong> added to the queue!</p>
+          <p><strong>${addedCount} songs</strong> added to the queue!</p>
           <button class="btn btn-primary" id="btn-yt-done" style="margin-top:20px;">
             Done
           </button>

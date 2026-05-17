@@ -1,5 +1,5 @@
 import App from '../main.js';
-import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect } from '../services/socket.js';
+import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect, joinSession } from '../services/socket.js';
 import { initPlayer, loadSong } from '../services/player.js';
 import { showNotification } from '../components/notifications.js';
 import { renderNowPlaying } from '../components/now-playing.js';
