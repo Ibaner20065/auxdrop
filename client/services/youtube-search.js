@@ -31,6 +31,8 @@ export async function searchSongs(query) {
       q: `${query} music`,
       type: 'video',
       videoCategoryId: '10',
+      videoEmbeddable: 'true',
+      videoSyndicated: 'true',
       maxResults: 12,
       key: API_KEY,
     });
