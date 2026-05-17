@@ -4,12 +4,10 @@ export function renderNowPlaying(song, state) {
 
   if (!song) {
     container.innerHTML = `
-      <div class="now-playing">
-        <div class="now-playing-empty">
-          <div class="now-playing-empty-icon">♫</div>
-          <div class="now-playing-empty-text">Waiting for songs...</div>
-          <div class="now-playing-empty-sub">Add a song to get the party started</div>
-        </div>
+      <div class="now-playing-header">Media Player</div>
+      <div class="now-playing-content" style="align-items:center; justify-content:center; flex-direction:column;">
+        <div style="font-size:3rem;">♫</div>
+        <div style="font-family:var(--font-heading); font-size:1.5rem;">Waiting for songs...</div>
       </div>
     `;
     return;
@@ -20,31 +18,25 @@ export function renderNowPlaying(song, state) {
   const addedByName = addedByUser?.name || 'Unknown';
 
   container.innerHTML = `
-    <div class="now-playing animate-fadeIn">
-      <div class="now-playing-content">
-        <div class="now-playing-thumbnail-wrapper">
-          <img class="now-playing-thumbnail" src="${song.thumbnail}" alt="${song.title}" loading="lazy">
+    <div class="now-playing-header">
+      Now Playing <span class="badge animate-pulse" style="background:#ff0000; color:#fff; border-color:#ff5555 #800000 #800000 #ff5555; margin-left:8px;">HOT!</span>
+    </div>
+    <div class="now-playing-content">
+      <img class="now-playing-art" src="${song.thumbnail}" alt="${song.title}" loading="lazy">
+      <div class="now-playing-info">
+        <h2 class="now-playing-title">${song.title}</h2>
+        <p class="now-playing-artist">${song.artist}</p>
+        <div class="now-playing-meta">
+          <span>Added by: <strong style="color:var(--accent-blue)">${addedByName}</strong></span>
+          ${isUsersSong ? '<span class="badge" style="margin-left:8px; background:var(--accent-yellow)">YOUR SONG</span>' : ''}
         </div>
-        <div class="now-playing-info">
-          <div class="now-playing-label">Now Playing</div>
-          <h2 class="now-playing-title">${song.title}</h2>
-          <p class="now-playing-artist">${song.artist}</p>
-          <div class="now-playing-added-by">
-            <span>Added by</span>
-            <span style="color:var(--text-secondary)">${addedByName}</span>
-            ${isUsersSong ? '<span class="song-card-badge song-card-badge-yours" style="font-size:0.7rem;margin-left:4px;">Your Song</span>' : ''}
+        ${state.isHost ? `
+          <div style="margin-top:16px;">
+            <button class="btn btn-secondary" id="btn-skip-host" style="font-size:0.8rem; padding:4px 8px;">
+              ⏭ Skip Track
+            </button>
           </div>
-          <div class="now-playing-progress">
-            <div class="now-playing-progress-bar" id="now-playing-progress-bar" style="width:0%"></div>
-          </div>
-          ${state.isHost ? `
-            <div class="now-playing-actions">
-              <button class="btn btn-secondary" id="btn-skip-host" style="font-size:0.8rem;">
-                ⏭ Skip
-              </button>
-            </div>
-          ` : ''}
-        </div>
+        ` : ''}
       </div>
     </div>
   `;

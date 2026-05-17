@@ -12,21 +12,23 @@ export function openSearchModal(onAdd) {
 
   modal.innerHTML = `
     <div class="modal-header">
-      <h2 class="modal-title">Add Song</h2>
+      <h2 class="modal-title">Search YouTube</h2>
       <button class="modal-close" id="search-modal-close">✕</button>
     </div>
-    <div class="search-modal-input-wrapper">
-      <span class="search-modal-icon">🔍</span>
-      <input
-        type="text"
-        class="search-modal-input"
-        id="search-input"
-        placeholder="Search YouTube for a song..."
-        autofocus
-      >
-    </div>
-    <div class="search-modal-results" id="search-results">
-      <div class="search-empty">Type at least 2 characters to search</div>
+    <div class="modal-body">
+      <div style="display:flex; gap:8px;">
+        <input
+          type="text"
+          class="input"
+          id="search-input"
+          placeholder="Enter song name or artist..."
+          style="margin:0;"
+          autofocus
+        >
+      </div>
+      <div class="search-results" id="search-results">
+        <div style="padding:16px; text-align:center;">Type at least 2 characters to search...</div>
+      </div>
     </div>
   `;
 
@@ -44,7 +46,7 @@ export function openSearchModal(onAdd) {
     clearTimeout(searchTimeout);
     const query = e.target.value.trim();
     if (query.length < 2) {
-      document.getElementById('search-results').innerHTML = '<div class="search-empty">Type at least 2 characters to search</div>';
+      document.getElementById('search-results').innerHTML = '<div style="padding:16px; text-align:center;">Type at least 2 characters to search...</div>';
       return;
     }
     searchTimeout = setTimeout(() => performSearch(query), 300);
@@ -72,7 +74,7 @@ async function performSearch(query) {
   const results = await searchSongs(query);
 
   if (results.length === 0) {
-    resultsContainer.innerHTML = '<div class="search-empty">No results found. Try a different search.</div>';
+    resultsContainer.innerHTML = '<div style="padding:16px; text-align:center;">No results found. Try a different search.</div>';
     return;
   }
 
@@ -82,12 +84,12 @@ async function performSearch(query) {
     item.className = 'search-result-item';
 
     item.innerHTML = `
-      <img class="search-result-thumb" src="${song.thumbnail}" alt="${song.title}" loading="lazy">
+      <img class="search-result-art" src="${song.thumbnail}" alt="${song.title}" loading="lazy">
       <div class="search-result-info">
-        <div class="search-result-title">${song.title}</div>
-        <div class="search-result-artist">${song.artist}</div>
+        <div style="font-weight:bold; font-family:var(--font-body);">${song.title}</div>
+        <div style="font-size:0.85rem; color:#555;">${song.artist}</div>
       </div>
-      <button class="search-result-add">Add</button>
+      <button class="btn btn-secondary search-result-add" style="padding:4px 8px; font-size:0.8rem;">ADD</button>
     `;
 
     item.querySelector('.search-result-add').addEventListener('click', (e) => {

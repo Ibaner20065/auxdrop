@@ -12,26 +12,29 @@ export function renderPlayerControls(state) {
   }
 
   container.innerHTML = `
-    <div class="player-controls visible">
-      <button class="player-controls-btn player-controls-btn-play" id="btn-play-pause">
-        ▶
-      </button>
-      <div class="player-controls-track">
-        <span class="player-controls-track-title">${state.nowPlaying.title}</span>
-        <span class="player-controls-track-artist">${state.nowPlaying.artist}</span>
+    <div class="player-controls">
+      <div class="player-actions">
+        <button class="btn" id="btn-play-pause">▶</button>
       </div>
-      <div class="player-controls-progress">
-        <span class="player-controls-time" id="player-current-time">0:00</span>
-        <span class="player-controls-time" id="player-duration">0:00</span>
+      <div class="player-track-info">
+        <div style="display:flex; flex-direction:column;">
+          <span class="player-title">${state.nowPlaying.title}</span>
+          <span class="player-artist">${state.nowPlaying.artist}</span>
+        </div>
       </div>
-      <button class="player-controls-btn" id="btn-volume" title="Volume">
-        🔊
-      </button>
-      ${state.isHost ? `
-        <button class="player-controls-btn" id="btn-skip" title="Skip" style="color:var(--accent-hot)">
-          ⏭
-        </button>
-      ` : ''}
+      <div class="player-progress-container">
+        <span id="player-current-time">0:00</span>
+        <div class="player-progress-bar">
+          <div class="player-progress-fill" id="player-progress-fill" style="width:0%;"></div>
+        </div>
+        <span id="player-duration">0:00</span>
+      </div>
+      <div class="player-actions">
+        <button class="btn" id="btn-volume" title="Volume">🔊</button>
+        ${state.isHost ? `
+          <button class="btn" id="btn-skip" title="Skip" style="color:var(--accent-red)">⏭</button>
+        ` : ''}
+      </div>
     </div>
   `;
 
@@ -58,9 +61,21 @@ function attachPlayerEvents() {
     if (currentEl) currentEl.textContent = formatTime(current);
     if (durationEl) durationEl.textContent = formatTime(duration);
 
-    const progressBar = document.getElementById('now-playing-progress-bar');
+    const progressBar = document.getElementById('player-progress-fill');
     if (progressBar && duration > 0) {
       progressBar.style.width = `${(current / duration) * 100}%`;
+    }
+  });
+
+  document.addEventListener('player-state-change', (e) => {
+    const { state: playerState } = e.detail;
+    const btn = document.getElementById('btn-play-pause');
+    if (btn) {
+      if (playerState === 1) { // PLAYING
+        btn.textContent = '⏸';
+      } else {
+        btn.textContent = '▶';
+      }
     }
   });
 }

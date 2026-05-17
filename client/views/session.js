@@ -19,13 +19,19 @@ export async function render() {
 
   container.className = 'view active session';
   container.innerHTML = `
+    <div id="album-gradient-bg"></div>
     <div id="session-header-container"></div>
     <div id="youtube-player" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;"></div>
     <main class="session-main">
+      <div class="marquee-container">
+        <span class="marquee-text" style="color:var(--accent-red); font-weight:bold;">✨ WELCOME TO AUXDROP ✨ ADD SONGS TO THE QUEUE AND UPVOTE YOUR FAVORITES! ✨ </span>
+        <span class="marquee-text" style="color:var(--accent-yellow); font-weight:bold;">🔥 THE DEMOCRATIC AUX CORD 🔥 </span>
+        <span class="marquee-text" style="color:var(--accent-blue); font-weight:bold;">🎵 NO BAD VIBES ALLOWED 🎵 </span>
+      </div>
       <div id="now-playing-container"></div>
       <section class="queue-section">
-        <div class="queue-header">
-          <h2 class="queue-title">Queue</h2>
+        <div class="queue-header" style="background: repeating-linear-gradient(45deg, #ffff00, #ffff00 10px, #000000 10px, #000000 20px);">
+          <h2 class="queue-title" style="background:#000; color:#fff; padding:2px 6px;">Queue</h2>
           <button class="queue-add-btn" id="btn-open-search">
             <span>+</span> Add Song
           </button>
@@ -123,6 +129,16 @@ function setupSocketListeners() {
     now_playing: (data) => {
       console.log('Now playing event received:', data.song?.title, 'playerReady:', App.state.playerReady);
       App.state.nowPlaying = data.song;
+      
+      const bgElement = document.getElementById('album-gradient-bg');
+      if (bgElement) {
+        if (data.song && data.song.thumbnail) {
+          bgElement.style.backgroundImage = \`url(\${data.song.thumbnail})\`;
+        } else {
+          bgElement.style.backgroundImage = 'none';
+        }
+      }
+
       renderNowPlaying(data.song, App.state);
       if (App.state.isHost && data.song) {
         if (App.state.playerReady) {

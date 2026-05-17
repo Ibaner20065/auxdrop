@@ -14,48 +14,49 @@ export function openStatsModal(stats) {
       <h2 class="modal-title">Session Summary</h2>
       <button class="modal-close" id="stats-modal-close">✕</button>
     </div>
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-value">${stats.totalSongsPlayed || 0}</div>
-        <div class="stat-label">Songs Played</div>
+    <div class="stats-grid" style="background:#000; padding:16px; border:var(--border-inset); border-color:var(--color-inset);">
+      <div class="stat-item" style="background:transparent; border:none;">
+        <div class="stat-value" style="color:#0f0;">${String(stats.totalSongsPlayed || 0).padStart(4, '0')}</div>
+        <div class="stat-label" style="color:#0f0;">Songs Played</div>
       </div>
-      <div class="stat-item">
-        <div class="stat-value">${stats.totalVotesCast || 0}</div>
-        <div class="stat-label">Votes Cast</div>
+      <div class="stat-item" style="background:transparent; border:none;">
+        <div class="stat-value" style="color:#0f0;">${String(stats.totalVotesCast || 0).padStart(4, '0')}</div>
+        <div class="stat-label" style="color:#0f0;">Votes Cast</div>
       </div>
-      <div class="stat-item">
-        <div class="stat-value">${stats.totalSongsAdded || 0}</div>
-        <div class="stat-label">Songs Added</div>
+      <div class="stat-item" style="background:transparent; border:none;">
+        <div class="stat-value" style="color:#0f0;">${String(stats.totalSongsAdded || 0).padStart(4, '0')}</div>
+        <div class="stat-label" style="color:#0f0;">Songs Added</div>
       </div>
-      <div class="stat-item">
-        <div class="stat-value">${duration}</div>
-        <div class="stat-label">Duration</div>
+      <div class="stat-item" style="background:transparent; border:none;">
+        <div class="stat-value" style="color:#0f0;">${duration}</div>
+        <div class="stat-label" style="color:#0f0;">Duration</div>
       </div>
 
+
       ${stats.djCrown ? `
-        <div class="stat-item stat-full stat-crown">
-          <div class="stat-value" style="font-size:1.1rem;">
+        <div class="stat-item stat-full stat-crown" style="background:transparent; border:none; margin-top:8px; border-top:1px dashed #0f0; padding-top:16px;">
+          <div class="stat-value" style="font-size:1.1rem; color:#0f0;">
             👑 ${stats.djCrown.name || 'Unknown'}
           </div>
-          <div class="stat-label">DJ Crown — Most songs played (${stats.djCrown.count})</div>
+          <div class="stat-label" style="color:#0f0;">DJ Crown — Most songs played (${stats.djCrown.count})</div>
         </div>
       ` : ''}
 
       ${stats.vibeKiller ? `
-        <div class="stat-item stat-full">
-          <div class="stat-value" style="font-size:1rem;-webkit-text-fill-color:var(--accent-hot);background:none;color:var(--accent-hot);">
+        <div class="stat-item stat-full" style="background:transparent; border:none;">
+          <div class="stat-value" style="font-size:1rem; color:#0f0;">
             😈 ${stats.vibeKiller.name || 'Unknown'}
           </div>
-          <div class="stat-label">Vibe Killer — Most songs skipped (${stats.vibeKiller.count})</div>
+          <div class="stat-label" style="color:#0f0;">Vibe Killer — Most songs skipped (${stats.vibeKiller.count})</div>
         </div>
       ` : ''}
 
       ${stats.mostControversial ? `
-        <div class="stat-item stat-full">
-          <div class="stat-value" style="font-size:1rem;">
+        <div class="stat-item stat-full" style="background:transparent; border:none;">
+          <div class="stat-value" style="font-size:1rem; color:#0f0;">
             "${stats.mostControversial.title}"
           </div>
-          <div class="stat-label">Most Controversial — ${stats.mostControversial.totalVotes} total votes</div>
+          <div class="stat-label" style="color:#0f0;">Most Controversial — ${stats.mostControversial.totalVotes} total votes</div>
         </div>
       ` : ''}
     </div>

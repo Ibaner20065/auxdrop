@@ -35,24 +35,9 @@ export function render() {
     </div>
   `;
 
-  createParticles();
   attachEvents();
 }
 
-function createParticles() {
-  const bg = document.getElementById('landing-bg');
-  for (let i = 0; i < 20; i++) {
-    const particle = document.createElement('div');
-    particle.className = 'landing-particle';
-    particle.style.left = `${Math.random() * 100}%`;
-    particle.style.top = `${Math.random() * 100}%`;
-    particle.style.animationDelay = `${Math.random() * 6}s`;
-    particle.style.animationDuration = `${4 + Math.random() * 4}s`;
-    particle.style.width = `${2 + Math.random() * 3}px`;
-    particle.style.height = particle.style.width;
-    bg.appendChild(particle);
-  }
-}
 
 function attachEvents() {
   const codeInput = document.getElementById('landing-code');
