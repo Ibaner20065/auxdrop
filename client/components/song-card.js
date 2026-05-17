@@ -1,4 +1,4 @@
-import { voteSong } from '../services/socket.js';
+import { voteSong, moveSong } from '../services/socket.js';
 import App from '../main.js';
 
 export function renderSongCard(song, state, index) {
@@ -25,6 +25,13 @@ export function renderSongCard(song, state, index) {
   }
 
   card.innerHTML = `
+    ${state.isHost ? `
+      <div class="reorder-overlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.8); z-index:10; border-radius:12px; align-items:center; justify-content:center; gap:16px;">
+        <button class="btn btn-reorder-up" style="font-size:24px; padding:8px 16px;">⬆️</button>
+        <button class="btn btn-reorder-down" style="font-size:24px; padding:8px 16px;">⬇️</button>
+        <button class="btn btn-reorder-close" style="font-size:24px; padding:8px 16px; background:var(--bg-card);">✕</button>
+      </div>
+    ` : ''}
     <img class="song-card-thumbnail" src="${song.thumbnail}" alt="${song.title}" loading="lazy">
     <div class="song-card-body">
       <div class="song-card-meta">
@@ -68,6 +75,42 @@ function attachVoteEvents(card, song) {
     voteSong(App.state.code, song.id, -1);
     animateVote(card);
   });
+
+  if (App.state.isHost) {
+    let longPressTimer;
+    const overlay = card.querySelector('.reorder-overlay');
+    const startPress = () => {
+      longPressTimer = setTimeout(() => {
+        overlay.style.display = 'flex';
+      }, 500); // 500ms long press
+    };
+    const cancelPress = () => clearTimeout(longPressTimer);
+
+    card.addEventListener('mousedown', startPress);
+    card.addEventListener('touchstart', startPress, { passive: true });
+    card.addEventListener('mouseup', cancelPress);
+    card.addEventListener('mouseleave', cancelPress);
+    card.addEventListener('touchend', cancelPress);
+    card.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      overlay.style.display = 'flex';
+    });
+
+    card.querySelector('.btn-reorder-close')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      overlay.style.display = 'none';
+    });
+    card.querySelector('.btn-reorder-up')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      moveSong(App.state.code, song.id, 'up');
+      overlay.style.display = 'none';
+    });
+    card.querySelector('.btn-reorder-down')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      moveSong(App.state.code, song.id, 'down');
+      overlay.style.display = 'none';
+    });
+  }
 }
 
 function animateVote(card) {

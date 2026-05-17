@@ -7,6 +7,30 @@ let progressInterval = null;
 let isMuted = false;
 let volume = 100;
 
+let wakeLock = null;
+
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      if (!wakeLock) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+        });
+      }
+    } catch (err) {
+      console.warn('Wake Lock error:', err);
+    }
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock !== null) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+}
+
 export function initPlayer(containerId, onReady, onEnd) {
   onReadyCallback = onReady;
   onEndCallback = onEnd;
@@ -53,8 +77,10 @@ function onPlayerStateChange(event) {
 
   if (event.data === YT.PlayerState.PLAYING) {
     startProgressTracking();
+    requestWakeLock();
   } else {
     stopProgressTracking();
+    releaseWakeLock();
   }
 
   document.dispatchEvent(new CustomEvent('player-state-change', {

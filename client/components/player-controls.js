@@ -14,7 +14,13 @@ export function renderPlayerControls(state) {
   container.innerHTML = `
     <div class="player-controls">
       <div class="player-actions">
+        ${state.isHost ? `
+          <button class="btn" id="btn-rewind" title="Rewind 10s">⏪</button>
+        ` : ''}
         <button class="btn" id="btn-play-pause">▶</button>
+        ${state.isHost ? `
+          <button class="btn" id="btn-fastforward" title="Fast Forward 10s">⏩</button>
+        ` : ''}
       </div>
       <div class="player-track-info">
         <div style="display:flex; flex-direction:column;">
@@ -22,12 +28,12 @@ export function renderPlayerControls(state) {
           <span class="player-artist">${state.nowPlaying.artist}</span>
         </div>
       </div>
-      <div class="player-progress-container">
-        <span id="player-current-time">0:00</span>
-        <div class="player-progress-bar">
+      <div class="player-progress-container" style="display:flex; align-items:center; gap:8px;">
+        <span id="player-current-time" style="width:40px; text-align:right;">0:00</span>
+        <div class="player-progress-bar" id="player-progress-click-area" style="cursor:pointer; flex:1;">
           <div class="player-progress-fill" id="player-progress-fill" style="width:0%;"></div>
         </div>
-        <span id="player-duration">0:00</span>
+        <span id="player-duration" style="width:40px;">0:00</span>
       </div>
       <div class="player-actions">
         <button class="btn" id="btn-volume" title="Volume">🔊</button>
@@ -44,9 +50,37 @@ export function renderPlayerControls(state) {
 function attachPlayerEvents() {
   document.getElementById('btn-play-pause')?.addEventListener('click', togglePlay);
 
-  document.getElementById('btn-skip')?.addEventListener('click', () => {
-    skipCurrent(App.state.code);
-  });
+  if (App.state.isHost) {
+    document.getElementById('btn-skip')?.addEventListener('click', () => {
+      skipCurrent(App.state.code);
+    });
+
+    document.getElementById('btn-rewind')?.addEventListener('click', () => {
+      const player = getPlayer();
+      if (player) {
+        player.seekTo(Math.max(0, player.getCurrentTime() - 10), true);
+      }
+    });
+
+    document.getElementById('btn-fastforward')?.addEventListener('click', () => {
+      const player = getPlayer();
+      if (player) {
+        player.seekTo(Math.min(player.getDuration(), player.getCurrentTime() + 10), true);
+      }
+    });
+
+    const progressArea = document.getElementById('player-progress-click-area');
+    if (progressArea) {
+      progressArea.addEventListener('click', (e) => {
+        const rect = progressArea.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        const player = getPlayer();
+        if (player && player.getDuration) {
+          player.seekTo(pos * player.getDuration(), true);
+        }
+      });
+    }
+  }
 
   document.getElementById('btn-volume')?.addEventListener('click', () => {
     const muted = toggleMute();

@@ -113,3 +113,38 @@ export function clearQueue(sessionCode) {
 export function getInternalQueue(sessionCode) {
   return queues.get(sessionCode) || [];
 }
+
+export function moveSong(sessionCode, songId, direction) {
+  const queue = queues.get(sessionCode);
+  if (!queue) return null;
+  
+  const sorted = getSortedQueue(sessionCode);
+  const idx = sorted.findIndex(s => s.id === songId);
+  if (idx === -1) return null;
+  
+  if (direction === 'up' && idx > 0) {
+    const target = sorted[idx];
+    const swapWith = sorted[idx - 1];
+    
+    const tempScore = target.score;
+    target.score = swapWith.score;
+    swapWith.score = tempScore;
+    
+    const tempAdded = target.addedAt;
+    target.addedAt = swapWith.addedAt - 1;
+    swapWith.addedAt = tempAdded;
+  } else if (direction === 'down' && idx < sorted.length - 1) {
+    const target = sorted[idx];
+    const swapWith = sorted[idx + 1];
+    
+    const tempScore = target.score;
+    target.score = swapWith.score;
+    swapWith.score = tempScore;
+    
+    const tempAdded = target.addedAt;
+    target.addedAt = swapWith.addedAt + 1;
+    swapWith.addedAt = tempAdded;
+  }
+  
+  return { queue: sanitizeQueue(getSortedQueue(sessionCode)) };
+}

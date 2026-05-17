@@ -23,6 +23,7 @@ import {
   nextSong,
   markPlayed,
   clearQueue,
+  moveSong,
 } from './managers/queue-manager.js';
 import { vote } from './managers/vote-manager.js';
 import { generateStats } from './managers/stats-manager.js';
@@ -146,6 +147,23 @@ io.on('connection', (socket) => {
   });
 
   // ─── Disconnect ────────────────────────────────────────────────
+  socket.on('move_song', ({ code, songId, direction }, callback) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (!mapping || mapping.code !== code) return;
+      
+      const session = getSession(code);
+      if (session && session.hostId === mapping.user.id) {
+        const result = moveSong(code, songId, direction);
+        if (result && result.queue) {
+          io.to(code).emit('queue_updated', { queue: result.queue });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
   socket.on('disconnect', () => {
     try {
       const result = leaveSession(socket.id);

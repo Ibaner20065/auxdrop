@@ -139,6 +139,16 @@ export function getQueue(code) {
   });
 }
 
+export function moveSong(code, songId, direction) {
+  if (!socket) return Promise.reject('Not connected');
+  return new Promise((resolve) => {
+    socket.emit('move_song', { code, songId, direction }, (response) => {
+      resolve(response || { error: 'Failed to move song' });
+    });
+    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+  });
+}
+
 export function disconnect() {
   if (socket) {
     socket.disconnect();
