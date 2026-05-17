@@ -16,17 +16,6 @@ const App = {
   },
 
   init() {
-    // Handle Spotify OAuth popup return (PKCE flow — code comes as ?code= query param)
-    if (window.opener) {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      if (code) {
-        window.opener.postMessage({ type: 'SPOTIFY_CODE', code }, window.location.origin);
-        window.close();
-        return;
-      }
-    }
-
     this.showView('landing');
     window.__auxdrop = this;
   },

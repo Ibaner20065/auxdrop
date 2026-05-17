@@ -7,7 +7,7 @@ import { renderQueueCarousel, updateQueueCarousel } from '../components/queue-ca
 import { renderSessionHeader } from '../components/session-header.js';
 import { renderUserBubbles, updateUserBubbles } from '../components/user-bubbles.js';
 import { openSearchModal } from '../components/search-modal.js';
-import { openSpotifyImportModal } from '../components/spotify-import.js';
+import { openYouTubeImportModal } from '../components/youtube-import.js';
 import { renderPlayerControls } from '../components/player-controls.js';
 import { openStatsModal } from '../components/stats-modal.js';
 
@@ -37,8 +37,8 @@ export async function render() {
             <button class="queue-add-btn" id="btn-open-search">
               <span>+</span> Add Song
             </button>
-            <button class="queue-add-btn" id="btn-open-spotify" style="background:#1DB954; border-color:#1DB954; color:#000;">
-              🎵 Spotify
+            <button class="queue-add-btn" id="btn-open-yt" style="background:#FF0000; border-color:#FF0000; color:#FFF;">
+              ▶️ YT Playlist
             </button>
           </div>
         </div>
@@ -80,8 +80,8 @@ function attachSessionEvents() {
   document.getElementById('btn-open-search')?.addEventListener('click', () => {
     openSearchModal(handleAddSong);
   });
-  document.getElementById('btn-open-spotify')?.addEventListener('click', () => {
-    openSpotifyImportModal(handleAddSong);
+  document.getElementById('btn-open-yt')?.addEventListener('click', () => {
+    openYouTubeImportModal(handleAddSong);
   });
 }
 

@@ -66,3 +66,39 @@ export function setApiKey(key) {
 export function clearCache() {
   cache.clear();
 }
+
+export async function getYouTubePlaylistItems(playlistId, maxResults = 50) {
+  if (!API_KEY) throw new Error('YouTube API Key is missing.');
+  
+  const params = new URLSearchParams({
+    part: 'snippet',
+    playlistId,
+    maxResults,
+    key: API_KEY,
+  });
+
+  const response = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${params}`);
+  if (!response.ok) {
+    let msg = `API Error ${response.status}`;
+    try { const e = await response.json(); msg = e.error.message || msg; } catch {}
+    throw new Error(msg);
+  }
+
+  const data = await response.json();
+  const results = [];
+  
+  for (const item of data.items || []) {
+    // Ignore deleted or private videos
+    if (item.snippet.title === 'Private video' || item.snippet.title === 'Deleted video') continue;
+    
+    results.push({
+      videoId: item.snippet.resourceId.videoId,
+      title: item.snippet.title,
+      artist: item.snippet.videoOwnerChannelTitle || '',
+      thumbnail: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+      duration: 0,
+    });
+  }
+  
+  return results;
+}
