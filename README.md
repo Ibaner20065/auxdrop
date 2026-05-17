@@ -50,3 +50,27 @@ This will automatically launch:
 5. **Player Controls**: As the host, you can use the player controls at the bottom of the screen to play, pause, or skip tracks.
 
 Enjoy the jams! 🚀
+
+---
+
+## 🌐 Production Deployment Guide
+
+To deploy **AuxDrop** to production, you must deploy the frontend (client) and the backend (server) separately.
+
+### 1. Deploy the Backend (Server)
+The backend uses **WebSockets (Socket.io)** and requires a persistent, long-running Node.js environment (WebSockets **do not** work on serverless platforms like Vercel).
+- **Recommended Platforms:** [Render](https://render.com/), [Fly.io](https://fly.io/), [Railway](https://railway.app/), or [Heroku](https://www.heroku.com/).
+- **Root Directory:** Configure your build setting to target the root directory.
+- **Build Command:** `npm install`
+- **Start Command:** `npm start`
+- **Environment Variables:**
+  - `PORT`: Set by host (usually default).
+  - `CLIENT_ORIGIN`: Set this to your frontend URL (e.g., `https://auxdrop.vercel.app`) to authorize CORS.
+
+### 2. Deploy the Frontend (Vercel)
+You can easily deploy the frontend to Vercel.
+- **Build Command:** Vercel automatically runs the root `npm run build` which installs and compiles the client.
+- **Output Directory:** Configured via `vercel.json` as `client/dist`.
+- **Environment Variables:**
+  - `VITE_YOUTUBE_API_KEY`: Your YouTube Data API v3 key.
+  - `VITE_BACKEND_URL`: Set this to your backend server's URL (e.g., `https://auxdrop-backend.onrender.com`). If not set, it defaults to the current origin (which will fail if the backend is not on Vercel).

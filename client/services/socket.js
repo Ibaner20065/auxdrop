@@ -5,7 +5,8 @@ let socket = null;
 export function connect() {
   if (socket?.connected) return socket;
 
-  socket = io({
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
+  socket = io(backendUrl, {
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionDelay: 1000,
