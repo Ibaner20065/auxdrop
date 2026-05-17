@@ -1,4 +1,4 @@
-let API_KEY = 'AIzaSyA_HcE00M8EEjiC7tlzg4HjR4wYenASAms';
+let API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || '';
 const BASE_URL = 'https://www.googleapis.com/youtube/v3/search';
 
 const cache = new Map();
