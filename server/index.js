@@ -259,7 +259,24 @@ io.on('connection', (socket) => {
         callback?.({ success: false, error: 'Host only' });
         return;
       }
-      
+
+      const session = getSession(code);
+      if (session && session.nowPlaying) {
+        markPlayed(code, session.nowPlaying.id);
+      }
+
+      const next = nextSong(code);
+      if (next) {
+        setNowPlaying(code, next);
+        io.to(code).emit('now_playing', {
+          song: { ...next, votes: undefined },
+        });
+        io.to(code).emit('queue_updated', { queue: getPublicSortedQueue(code) });
+      } else {
+        setNowPlaying(code, null);
+        io.to(code).emit('queue_empty');
+      }
+
       io.to(code).emit('host_skip');
       callback?.({ success: true });
     } catch (err) {

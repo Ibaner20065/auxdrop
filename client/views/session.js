@@ -57,7 +57,6 @@ export async function render() {
       () => {
         state.playerReady = true;
         console.log('YouTube player ready');
-        // If a song was queued before player was ready, play it now
         if (state.nowPlaying) {
           loadSong(state.nowPlaying.videoId);
         }
@@ -94,6 +93,16 @@ function handleSongEnd(videoId) {
   }
 }
 
+function updateAlbumBackground(song) {
+  const bgElement = document.getElementById('album-gradient-bg');
+  if (!bgElement) return;
+  if (song && song.thumbnail) {
+    bgElement.style.backgroundImage = 'url(' + song.thumbnail + ')';
+  } else {
+    bgElement.style.backgroundImage = 'none';
+  }
+}
+
 function setupSocketListeners() {
   cleanupListeners();
 
@@ -101,7 +110,7 @@ function setupSocketListeners() {
     user_joined: (data) => {
       App.state.users = data.users;
       updateUserBubbles(data.users, App.state);
-      showNotification('join', `${data.userName || 'Someone'} joined the session`);
+      showNotification('join', (data.userName || 'Someone') + ' joined the session');
     },
 
     user_left: (data) => {
@@ -127,19 +136,12 @@ function setupSocketListeners() {
     },
 
     now_playing: (data) => {
-      console.log('Now playing event received:', data.song?.title, 'playerReady:', App.state.playerReady);
+      console.log('Now playing event received:', data.song ? data.song.title : 'nothing', 'playerReady:', App.state.playerReady);
       App.state.nowPlaying = data.song;
-      
-      const bgElement = document.getElementById('album-gradient-bg');
-      if (bgElement) {
-        if (data.song && data.song.thumbnail) {
-          bgElement.style.backgroundImage = \`url(\${data.song.thumbnail})\`;
-        } else {
-          bgElement.style.backgroundImage = 'none';
-        }
-      }
 
+      updateAlbumBackground(data.song);
       renderNowPlaying(data.song, App.state);
+
       if (App.state.isHost && data.song) {
         if (App.state.playerReady) {
           loadSong(data.song.videoId);
@@ -157,12 +159,14 @@ function setupSocketListeners() {
     },
 
     host_skip: () => {
-      showNotification('info', 'Host skipped the current song');
+      showNotification('info', 'Host skipped the current track');
     },
 
     queue_empty: () => {
       App.state.nowPlaying = null;
+      updateAlbumBackground(null);
       renderNowPlaying(null, App.state);
+      renderPlayerControls(App.state);
       showNotification('info', 'Queue is empty — add some songs!');
     },
 
