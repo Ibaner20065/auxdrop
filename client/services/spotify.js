@@ -1,6 +1,6 @@
 const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '';
 const REDIRECT_URI = window.location.origin;
-const SCOPES = 'playlist-read-private playlist-read-collaborative';
+const SCOPES = 'playlist-read-private playlist-read-collaborative user-read-private user-read-email';
 
 // ─── PKCE Helpers ────────────────────────────────────────────────
 function generateRandomString(length) {
