@@ -69,7 +69,7 @@ export function openYouTubeImportModal(onAddSong) {
       const tracks = await getYouTubePlaylistItems(playlistId, 50); // Get up to 50 tracks
       
       if (tracks.length === 0) {
-        throw new Error('No valid tracks found. Make sure the playlist is Public or Unlisted.');
+        throw new Error('No valid tracks found. The playlist might be empty, private, or a dynamic "Mix" (which YouTube blocks).');
       }
 
       statusEl.textContent = `Found ${tracks.length} tracks. Adding to queue...`;
