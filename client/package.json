@@ -1,0 +1,19 @@
+{
+  "name": "auxdrop-client",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "animejs": "^3.2.2",
+    "socket.io-client": "^4.7.4",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "vite": "^5.1.0"
+  }
+}

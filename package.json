@@ -1,0 +1,16 @@
+{
+  "name": "auxdrop",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The Democratic Aux Cord — real-time shared music queue with voting",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

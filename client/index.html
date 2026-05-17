@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuxDrop — The Democratic Aux Cord</title>
+  <meta name="description" content="Real-time shared music queue where everyone votes on what plays next.">
+  <meta property="og:title" content="AuxDrop">
+  <meta property="og:description" content="The Democratic Aux Cord — real-time shared music queue with voting">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div id="app">
+    <div id="view-landing" class="view active"></div>
+    <div id="view-session" class="view"></div>
+  </div>
+
+  <div id="notification-container"></div>
+
+  <div id="search-modal-overlay" class="modal-overlay hidden">
+    <div id="search-modal" class="modal"></div>
+  </div>
+
+  <div id="stats-modal-overlay" class="modal-overlay hidden">
+    <div id="stats-modal" class="modal"></div>
+  </div>
+
+  <div id="qr-modal-overlay" class="modal-overlay hidden">
+    <div id="qr-modal" class="modal"></div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
