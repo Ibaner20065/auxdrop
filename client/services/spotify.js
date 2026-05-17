@@ -109,7 +109,12 @@ export async function getMyPlaylists(token) {
   });
   if (!res.ok) {
     if (res.status === 401) clearToken();
-    throw new Error('Failed to fetch playlists');
+    let errMsg = 'Failed to fetch playlists';
+    try {
+      const errData = await res.json();
+      errMsg = errData.error?.message || errData.error_description || errMsg;
+    } catch (e) {}
+    throw new Error(`(${res.status}) ${errMsg}`);
   }
   const data = await res.json();
   return data.items || [];

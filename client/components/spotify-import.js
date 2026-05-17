@@ -150,13 +150,17 @@ async function showPlaylists(token, closeModal, onAddSong) {
     });
 
   } catch (err) {
+    clearToken();
     body.innerHTML = `
       <div style="text-align:center; padding:24px; color:var(--accent-red);">
-        <p>Session expired. Please reconnect.</p>
-        <button class="btn" id="btn-spotify-reconnect" style="margin-top:12px;">Reconnect</button>
+        <p style="font-weight:bold; margin-bottom:8px;">Spotify Error</p>
+        <p style="font-size:0.85rem; word-break:break-word;">${err.message}</p>
+        <button class="btn" id="btn-spotify-reconnect" style="margin-top:16px;">Start Over</button>
       </div>
     `;
-    document.getElementById('btn-spotify-reconnect').addEventListener('click', () => openSpotifyImportModal(onAddSong));
+    document.getElementById('btn-spotify-reconnect').addEventListener('click', () => {
+      openSpotifyImportModal(onAddSong);
+    });
   }
 }
 
