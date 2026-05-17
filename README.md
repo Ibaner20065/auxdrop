@@ -1,76 +1,136 @@
-# AuxDrop - The Democratic Aux Cord 🎵🔥
+<div align="center">
+  <img src="./client/public/favicon.svg" alt="AuxDrop Logo" width="120" height="120" />
+  <h1>AuxDrop</h1>
+  <p><strong>The Democratic Aux Cord for Shared Spaces</strong></p>
+  <p>
+    <a href="#features">Features</a> •
+    <a href="#tech-stack">Tech Stack</a> •
+    <a href="#architecture">Architecture</a> •
+    <a href="#getting-started">Getting Started</a> •
+    <a href="#deployment">Deployment</a>
+  </p>
+</div>
 
-Welcome to **AuxDrop**, a retro-90s inspired application designed to gamify music selection in shared spaces. It uses a host/client architecture where one person hosts the YouTube player and others join the room to queue and upvote songs democratically.
+<br />
 
-## Features
-- **Retro 90s "Windows 95" Aesthetic:** Includes outset bevels, system fonts, and glorious animated marquees.
-- **Democratic Queue:** Add songs and upvote your favorites. The highest upvoted songs play first.
-- **Album Art Gradient Background:** The background dynamically blurs and color-matches the currently playing song's album art.
-- **Play/Pause/Skip Controls:** Host controls for audio management.
-
-## Prerequisites
-- **Node.js** (v18 or higher recommended)
-- **npm** (Node Package Manager)
-
-## Setup Instructions
-
-### 1. Configure the Environment
-You need a YouTube Data API v3 key to enable song searching.
-Create a `.env` file inside the `client/` directory and add your API key:
-
-```env
-VITE_YOUTUBE_API_KEY=your_api_key_here
-```
-
-*(Note: The `.env` file is included in `.gitignore` to prevent leaking your key to GitHub).*
-
-### 2. Install Dependencies
-Navigate to the root directory of the project in your terminal and install the required Node modules:
-
-```bash
-npm install
-```
-
-### 3. Run on Localhost
-Start both the backend server and the frontend Vite development server concurrently by running:
-
-```bash
-npm run dev
-```
-
-This will automatically launch:
-- The **Backend WebSocket Server** on port `3000`.
-- The **Frontend Application** typically on `http://localhost:5173`.
-
-### 4. Using the App
-1. **Host a Session**: Click "Start a Session" on the landing page. Share the generated 4-letter room code with your friends.
-2. **Join a Session**: Your friends can enter the room code on their devices to join.
-3. **Queue Songs**: Click "Add Song", search for a track, and add it.
-4. **Vote**: Click the "Upvote" button on songs in the queue to bump them to the top.
-5. **Player Controls**: As the host, you can use the player controls at the bottom of the screen to play, pause, or skip tracks.
-
-Enjoy the jams! 🚀
+**AuxDrop** is a real-time, room-based collaborative music queue application. Built for parties, road trips, and shared spaces, it solves the problem of a single person monopolizing the aux cord. Guests can join a session via a simple 6-digit code, search YouTube for music, add tracks, and democratically upvote/downvote the queue. The application automatically handles playback on the Host's device while staying in perfect sync with all connected users.
 
 ---
 
-## 🌐 Production Deployment Guide
+## ⚡ Features
 
-To deploy **AuxDrop** to production, you must deploy the frontend (client) and the backend (server) separately.
+### 🎵 Collaborative Queue & Democratic Voting
+- **Live Syncing:** Songs added by any user instantly appear on everyone's device via WebSockets.
+- **Democratic Upvoting:** Users can upvote (+1) or downvote (-1) tracks in the queue. The queue constantly reorders itself based on score, ensuring the most popular tracks play next.
+- **Auto-Skip Threshold:** Tracks that fall below a specific negative score threshold (e.g., heavily downvoted) are visually flagged and pushed to the bottom.
 
-### 1. Deploy the Backend (Server)
-The backend uses **WebSockets (Socket.io)** and requires a persistent, long-running Node.js environment (WebSockets **do not** work on serverless platforms like Vercel).
-- **Recommended Platforms:** [Render](https://render.com/), [Fly.io](https://fly.io/), [Railway](https://railway.app/), or [Heroku](https://www.heroku.com/).
-- **Root Directory:** Configure your build setting to target the root directory.
-- **Build Command:** `npm install`
-- **Start Command:** `npm start`
-- **Environment Variables:**
-  - `PORT`: Set by host (usually default).
-  - `CLIENT_ORIGIN`: Set this to your frontend URL (e.g., `https://auxdrop.vercel.app`) to authorize CORS.
+### 📱 Host Controls & Mobile Optimization
+- **Full Playback Control:** The Host controls the physical audio output via the hidden YouTube IFrame API, featuring play/pause, volume, 10s Fast-Forward/Rewind, and progress bar seeking.
+- **Queue Override:** The Host can long-press (or right-click) any track to override the democratic vote and manually force it Up/Down the queue.
+- **Mobile WakeLock:** Automatically requests the OS WakeLock API when the Host plays a track on mobile, preventing screen sleep and ensuring continuous, uninterrupted background playback.
 
-### 2. Deploy the Frontend (Vercel)
-You can easily deploy the frontend to Vercel.
-- **Build Command:** Vercel automatically runs the root `npm run build` which installs and compiles the client.
-- **Output Directory:** Configured via `vercel.json` as `client/dist`.
-- **Environment Variables:**
-  - `VITE_YOUTUBE_API_KEY`: Your YouTube Data API v3 key.
-  - `VITE_BACKEND_URL`: Set this to your backend server's URL (e.g., `https://auxdrop-backend.onrender.com`). If not set, it defaults to the current origin (which will fail if the backend is not on Vercel).
+### 🔍 Advanced Import Tools
+- **YouTube Integration:** Search for any song on YouTube directly from the app interface.
+- **Playlist Bulk Import:** Instantly import up to 50 tracks from public/unlisted YouTube playlists (e.g., `list=PL...`) with a single click.
+
+### 🎨 Premium "Netflix-Inspired" UI
+- Built with a high-fidelity, animation-rich, dark-mode-first aesthetic.
+- Features glassmorphism, contextual user bubbles, and real-time state transitions without bulky frameworks.
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+- **Framework:** Vanilla JavaScript (ES6 Modules)
+- **Bundler:** Vite
+- **Styling:** Vanilla CSS (CSS Variables, Flexbox/Grid, Keyframe Animations)
+- **Player API:** YouTube IFrame Player API
+
+### Backend
+- **Runtime:** Node.js
+- **Server:** Express.js
+- **Real-Time Communication:** Socket.io
+- **State Management:** In-Memory Map (Session & Queue Managers)
+
+### External APIs
+- **YouTube Data API v3:** Powers track search and playlist extraction.
+
+---
+
+## 🏗 Architecture
+
+AuxDrop operates on a highly decoupled client-server model optimized for rapid, real-time events.
+
+1. **Session Manager:** Handles the creation of 6-character room codes (`server/managers/session-manager.js`). Maps unique `socket.id` connections to users.
+2. **Queue Manager:** Maintains an isolated array of tracks for every active session (`server/managers/queue-manager.js`). Handles the complex sorting logic based on `score` and `addedAt` tiebreakers.
+3. **Socket Orchestrator:** The `index.js` file on the server listens for granular events (`add_song`, `vote_song`, `move_song`, `skip_current`) and broadcasts localized updates (`queue_updated`, `now_playing`) exclusively to users in that specific room using Socket.io namespaces/rooms.
+
+---
+
+## 🚀 Getting Started (Local Development)
+
+### Prerequisites
+- Node.js (v18+)
+- A YouTube Data API v3 Key ([Google Cloud Console](https://console.cloud.google.com/))
+
+### 1. Clone the Repository
+\`\`\`bash
+git clone https://github.com/Ibaner20065/auxdrop.git
+cd auxdrop
+\`\`\`
+
+### 2. Setup the Backend
+\`\`\`bash
+cd server
+npm install
+npm run dev
+\`\`\`
+*The server will start on `http://localhost:3001`.*
+
+### 3. Setup the Frontend
+Open a new terminal window:
+\`\`\`bash
+cd client
+npm install
+\`\`\`
+
+Create a `.env` file in the `client` directory:
+\`\`\`env
+VITE_BACKEND_URL=http://localhost:3001
+VITE_YOUTUBE_API_KEY=your_youtube_data_api_key_here
+\`\`\`
+
+Start the frontend development server:
+\`\`\`bash
+npm run dev
+\`\`\`
+*The client will start on `http://localhost:5173`.*
+
+---
+
+## 🌍 Deployment
+
+AuxDrop is designed for simple, split deployment:
+
+### Backend (Render)
+1. Connect the repository to **Render.com**.
+2. Create a new **Web Service**.
+3. Set the Root Directory to `server`.
+4. Build Command: `npm install`
+5. Start Command: `npm start`
+6. *Note: Ensure your Render service is configured to handle WebSocket traffic.*
+
+### Frontend (Vercel)
+1. Connect the repository to **Vercel**.
+2. Set the Root Directory to `client`.
+3. Add the following Environment Variables in the Vercel dashboard:
+   - \`VITE_BACKEND_URL\`: Your deployed Render URL (e.g., `https://auxdrop-backend.onrender.com`).
+   - \`VITE_YOUTUBE_API_KEY\`: Your YouTube Data API Key.
+4. **Important API Security:** In your Google Cloud Console, ensure you whitelist your Vercel production domain under the YouTube API Key's HTTP Referrer restrictions to prevent `403` errors.
+
+---
+
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
