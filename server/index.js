@@ -103,7 +103,16 @@ io.on('connection', (socket) => {
         ...publicSession,
         queue,
       });
-      callback?.({ success: true, userId });
+      callback?.({
+        success: true,
+        userId,
+        code: normalizedCode,
+        hostId: publicSession.hostId,
+        isHost: false,
+        users: publicSession.users || [],
+        nowPlaying: publicSession.nowPlaying || null,
+        queue: queue || [],
+      });
 
       console.log(`${userName || 'Guest'} joined session ${normalizedCode}`);
     } catch (err) {
