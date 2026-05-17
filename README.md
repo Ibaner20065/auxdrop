@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./client/public/favicon.svg" alt="AuxDrop Logo" width="120" height="120" />
+  <img src="./client/public/logo.png" alt="AuxDrop Logo" width="400" />
   <h1>AuxDrop</h1>
   <p><strong>The Democratic Aux Cord for Shared Spaces</strong></p>
   <p>
