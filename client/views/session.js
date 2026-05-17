@@ -51,7 +51,7 @@ export async function render() {
   attachSessionEvents();
   setupSocketListeners();
 
-  if (state.isHost && !state.playerReady) {
+  if (!state.playerReady) {
     initPlayer(
       'youtube-player',
       () => {
@@ -61,7 +61,8 @@ export async function render() {
           loadSong(state.nowPlaying.videoId);
         }
       },
-      handleSongEnd
+      // Only the host notifies the server when a song ends
+      state.isHost ? handleSongEnd : null
     );
   }
 
@@ -142,7 +143,7 @@ function setupSocketListeners() {
       updateAlbumBackground(data.song);
       renderNowPlaying(data.song, App.state);
 
-      if (App.state.isHost && data.song) {
+      if (data.song) {
         if (App.state.playerReady) {
           loadSong(data.song.videoId);
         } else {
