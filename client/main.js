@@ -16,13 +16,12 @@ const App = {
   },
 
   init() {
-    // Handle Spotify OAuth popup return — if we're in a popup with an access_token
-    // hash, send it to the opener and close this window immediately.
+    // Handle Spotify OAuth popup return (PKCE flow — code comes as ?code= query param)
     if (window.opener) {
-      const hash = new URLSearchParams(window.location.hash.substring(1));
-      const token = hash.get('access_token');
-      if (token) {
-        window.opener.postMessage({ type: 'SPOTIFY_TOKEN', token }, window.location.origin);
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (code) {
+        window.opener.postMessage({ type: 'SPOTIFY_CODE', code }, window.location.origin);
         window.close();
         return;
       }
