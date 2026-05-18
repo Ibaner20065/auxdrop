@@ -582,3 +582,112 @@ a:hover, a:active { color: var(--accent-red); }
   transition: background-image 1s ease-in-out;
   pointer-events: none;
 }
+
+/* Dark Mode when Playing */
+@keyframes moving-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+body.dark-mode {
+  --bg-primary: rgba(30, 30, 30, 0.6);
+  --text-primary: #ffffff;
+  --text-muted: #cccccc;
+  --panel-yellow: rgba(20, 20, 20, 0.6);
+  --color-outset: #666666 #000000 #000000 #666666;
+  --color-inset: #000000 #666666 #666666 #000000;
+  --title-bar: #1a1a5c;
+  --title-bar-end: #0f4a7a;
+  
+  background-color: #121212;
+  background-image: linear-gradient(-45deg, #1e3a8a, #581c87, #0f766e, #9f1239);
+  background-size: 400% 400%;
+  animation: moving-gradient 15s ease infinite;
+  color: var(--text-primary);
+}
+
+body.dark-mode .now-playing-content,
+body.dark-mode .queue-list,
+body.dark-mode .modal-body,
+body.dark-mode .input,
+body.dark-mode .search-results {
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  border-color: var(--color-inset);
+}
+
+body.dark-mode .song-card,
+body.dark-mode .search-result-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom-color: #444;
+}
+
+body.dark-mode .song-card:nth-child(odd),
+body.dark-mode .search-result-item:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .song-artist,
+body.dark-mode .player-artist {
+  color: var(--text-muted);
+}
+
+body.dark-mode .btn,
+body.dark-mode .landing-btn,
+body.dark-mode .queue-add-btn,
+body.dark-mode .modal-close {
+  background: rgba(60, 60, 60, 0.8);
+  color: #ffffff;
+}
+
+body.dark-mode .btn-primary,
+body.dark-mode .landing-btn-primary {
+  background: var(--accent-blue);
+  color: #ffffff;
+}
+
+body.dark-mode .vote-btn {
+  background: rgba(60, 60, 60, 0.8);
+  color: #ffffff;
+}
+
+body.dark-mode .vote-btn.active {
+  background: rgba(200, 180, 0, 0.8);
+}
+
+.theme-toggle-btn {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: var(--bg-primary);
+  border: var(--border-outset);
+  border-color: var(--color-outset);
+  box-shadow: var(--shadow-outset);
+  font-size: 1.5rem;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-btn:active {
+  border-color: var(--color-inset);
+  box-shadow: var(--shadow-inset);
+  transform: translate(1px, 1px);
+}
+
+body.dark-mode .chat-section {
+  background: rgba(0, 0, 0, 0.5) !important;
+  border-color: var(--color-inset) !important;
+}
+body.dark-mode #chat-messages {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: #fff;
+  border-color: var(--color-inset) !important;
+}
+body.dark-mode .chat-message {
+  border-bottom: 1px dotted #555 !important;
+}

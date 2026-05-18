@@ -129,6 +129,16 @@ export function songEnded(code, songId) {
   });
 }
 
+export function sendChatMessage(code, text) {
+  if (!socket) return Promise.reject('Not connected');
+  return new Promise((resolve) => {
+    socket.emit('send_chat_message', { code, text }, (response) => {
+      resolve(response || { error: 'Failed to send message' });
+    });
+    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+  });
+}
+
 export function getQueue(code) {
   if (!socket) return Promise.reject('Not connected');
   return new Promise((resolve) => {

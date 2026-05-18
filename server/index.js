@@ -343,6 +343,31 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ─── Chat Message ────────────────────────────────────────────────
+  socket.on('send_chat_message', ({ code, text }, callback) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (!mapping || mapping.code !== code) {
+        callback?.({ success: false, error: 'Not in session' });
+        return;
+      }
+      
+      const message = {
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+        userId: mapping.user.id,
+        userName: mapping.user.name,
+        text: text,
+        timestamp: Date.now(),
+      };
+      
+      io.to(code).emit('chat_message', message);
+      callback?.({ success: true });
+    } catch (err) {
+      console.error('Chat error:', err);
+      callback?.({ success: false, error: 'Failed to send message' });
+    }
+  });
+
   // ─── Get Queue ──────────────────────────────────────────────────
   socket.on('get_queue', ({ code }, callback) => {
     try {

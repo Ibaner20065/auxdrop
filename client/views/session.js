@@ -1,5 +1,5 @@
 import App from '../main.js';
-import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect, joinSession } from '../services/socket.js';
+import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect, joinSession, sendChatMessage } from '../services/socket.js';
 import { initPlayer, loadSong } from '../services/player.js';
 import { showNotification } from '../components/notifications.js';
 import { renderNowPlaying } from '../components/now-playing.js';
@@ -30,20 +30,34 @@ export async function render() {
         <span class="marquee-text" style="color:var(--accent-blue); font-weight:bold;">🎵 NO BAD VIBES ALLOWED 🎵 </span>
       </div>
       <div id="now-playing-container"></div>
-      <section class="queue-section">
-        <div class="queue-header" style="background: repeating-linear-gradient(45deg, #ffff00, #ffff00 10px, #000000 10px, #000000 20px);">
-          <h2 class="queue-title" style="background:#000; color:#fff; padding:2px 6px;">Queue</h2>
-          <div style="display:flex; gap:6px;">
-            <button class="queue-add-btn" id="btn-open-search">
-              <span>+</span> Add Song
-            </button>
-            <button class="queue-add-btn" id="btn-open-yt" style="background:#FF0000; border-color:#FF0000; color:#FFF;">
-              ▶️ YT Playlist
-            </button>
+      <div class="session-split-layout" style="display:flex; gap:16px; flex-wrap:wrap;">
+        <section class="queue-section" style="flex:2; min-width:300px;">
+          <div class="queue-header" style="background: repeating-linear-gradient(45deg, #ffff00, #ffff00 10px, #000000 10px, #000000 20px);">
+            <h2 class="queue-title" style="background:#000; color:#fff; padding:2px 6px;">Queue</h2>
+            <div style="display:flex; gap:6px;">
+              <button class="queue-add-btn" id="btn-open-search">
+                <span>+</span> Add Song
+              </button>
+              <button class="queue-add-btn" id="btn-open-yt" style="background:#FF0000; border-color:#FF0000; color:#FFF;">
+                ▶️ YT Playlist
+              </button>
+            </div>
           </div>
-        </div>
-        <div id="queue-carousel-container"></div>
-      </section>
+          <div id="queue-carousel-container"></div>
+        </section>
+        <section class="chat-section" style="flex:1; min-width:280px; display:flex; flex-direction:column; background:var(--bg-primary); border:var(--border-outset); border-color:var(--color-outset);">
+          <div class="chat-header" style="background: linear-gradient(to right, var(--title-bar), var(--title-bar-end)); color: white; padding: 8px;">
+            <h2 class="chat-title" style="font-family: var(--font-heading); margin: 0; font-size: 1.2rem; text-transform: uppercase;">Chat</h2>
+          </div>
+          <div id="chat-messages" style="flex:1; height:300px; overflow-y:auto; background:white; border:var(--border-inset); border-color:var(--color-inset); margin:var(--space-2); padding:var(--space-2); display:flex; flex-direction:column; gap:4px;">
+            <div style="color:var(--text-muted); text-align:center; font-style:italic; font-size:0.9rem;">Welcome to the chat!</div>
+          </div>
+          <div class="chat-input-container" style="display:flex; padding:var(--space-2); gap:var(--space-2); padding-top:0;">
+            <input type="text" id="chat-input" class="input" style="margin-bottom:0; flex:1;" placeholder="Say something..." maxlength="200" />
+            <button id="btn-send-chat" class="btn btn-primary" style="padding:0 var(--space-3);">Send</button>
+          </div>
+        </section>
+      </div>
     </main>
     <div id="player-controls-container"></div>
   `;
@@ -83,6 +97,21 @@ function attachSessionEvents() {
   document.getElementById('btn-open-yt')?.addEventListener('click', () => {
     openYouTubeImportModal(handleAddSong);
   });
+
+  const chatInput = document.getElementById('chat-input');
+  const btnSendChat = document.getElementById('btn-send-chat');
+  
+  const handleSendChat = () => {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    sendChatMessage(App.state.code, text);
+    chatInput.value = '';
+  };
+  
+  btnSendChat?.addEventListener('click', handleSendChat);
+  chatInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleSendChat();
+  });
 }
 
 function handleAddSong(song) {
@@ -111,6 +140,26 @@ function updateAlbumBackground(song) {
   } else {
     bgElement.style.backgroundImage = 'none';
   }
+}
+
+function appendChatMessage(message) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  
+  const msgEl = document.createElement('div');
+  msgEl.className = 'chat-message';
+  msgEl.style.cssText = 'padding: 4px; border-bottom: 1px dotted #ccc; word-wrap: break-word; font-size: 0.95rem;';
+  
+  const isMe = message.userId === App.state.userId;
+  const color = isMe ? 'var(--accent-blue)' : 'var(--title-bar)';
+  
+  msgEl.innerHTML = `
+    <strong style="color:${color}; font-family:var(--font-heading); margin-right:4px;">${message.userName}:</strong>
+    <span style="font-family:var(--font-body);">${message.text}</span>
+  `;
+  
+  container.appendChild(msgEl);
+  container.scrollTop = container.scrollHeight;
 }
 
 function setupSocketListeners() {
@@ -187,6 +236,10 @@ function setupSocketListeners() {
 
     error: (data) => {
       showNotification('error', data.message);
+    },
+
+    chat_message: (message) => {
+      appendChatMessage(message);
     },
   };
 

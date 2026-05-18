@@ -60,6 +60,25 @@ const App = {
 
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
+
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    // initialize from local storage
+    if (localStorage.getItem('themeOverride') === 'dark') {
+      document.body.classList.add('dark-mode');
+    } else if (localStorage.getItem('themeOverride') === 'light') {
+      document.body.classList.remove('dark-mode');
+    }
+    
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('themeOverride', isDark ? 'dark' : 'light');
+      themeToggle.textContent = isDark ? '☀️' : '🌙';
+    });
+    
+    // update icon initially
+    themeToggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+  }
 });
 
 export default App;

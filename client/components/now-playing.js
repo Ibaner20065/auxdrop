@@ -3,6 +3,13 @@ export function renderNowPlaying(song, state) {
   if (!container) return;
 
   if (!song) {
+    if (!localStorage.getItem('themeOverride')) {
+      document.body.classList.remove('dark-mode');
+    }
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn && !localStorage.getItem('themeOverride')) {
+      themeBtn.textContent = '🌙';
+    }
     container.innerHTML = `
       <div class="now-playing-header">Media Player</div>
       <div class="now-playing-content" style="align-items:center; justify-content:center; flex-direction:column;">
@@ -11,6 +18,14 @@ export function renderNowPlaying(song, state) {
       </div>
     `;
     return;
+  }
+
+  if (!localStorage.getItem('themeOverride')) {
+    document.body.classList.add('dark-mode');
+  }
+  const themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn && !localStorage.getItem('themeOverride')) {
+    themeBtn.textContent = '☀️';
   }
 
   const isUsersSong = song.addedBy === state.userId;
