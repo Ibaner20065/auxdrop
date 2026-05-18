@@ -10,6 +10,7 @@ import { openSearchModal } from '../components/search-modal.js';
 import { openYouTubeImportModal } from '../components/youtube-import.js';
 import { renderPlayerControls } from '../components/player-controls.js';
 import { openStatsModal } from '../components/stats-modal.js';
+import { renderLudoBoard } from '../components/ludo-board.js';
 
 const SESSION_SELECTOR = '#view-session';
 let eventHandlers = [];
@@ -24,6 +25,14 @@ export async function render() {
     <div id="session-header-container"></div>
     <div id="youtube-player" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;"></div>
     <main class="session-main">
+      <div id="session-tabs-nav" style="display:flex; gap:10px; margin-bottom:1rem; padding: 0.5rem; background: var(--bg-primary); border-bottom: var(--border-outset);">
+        <button class="btn btn-secondary tab-btn active" data-target="tab-music">🎵 Music Queue</button>
+        <button class="btn btn-secondary tab-btn" data-target="tab-snakes">🐍 Snakes & Ladders</button>
+        <button class="btn btn-secondary tab-btn" data-target="tab-ludo">🎲 Ludo</button>
+      </div>
+
+      <!-- MUSIC TAB -->
+      <div id="tab-music" class="session-tab-content active" style="display:block;">
       <div class="marquee-container">
         <span class="marquee-text" style="color:var(--accent-red); font-weight:bold;">✨ WELCOME TO AUXDROP ✨ ADD SONGS TO THE QUEUE AND UPVOTE YOUR FAVORITES! ✨ </span>
         <span class="marquee-text" style="color:var(--accent-yellow); font-weight:bold;">🔥 THE DEMOCRATIC AUX CORD 🔥 </span>
@@ -58,6 +67,23 @@ export async function render() {
           </div>
         </section>
       </div>
+      </div> <!-- End Music Tab -->
+
+      <!-- SNAKES & LADDERS TAB -->
+      <div id="tab-snakes" class="session-tab-content" style="display:none; text-align:center; padding: 2rem;">
+        <h2 style="font-family: var(--font-heading); color: var(--accent-green); font-size: 2rem;">🐍 Snakes & Ladders 🪜</h2>
+        <div style="background: white; border: var(--border-inset); border-color: var(--color-inset); width: 80%; max-width: 600px; height: 400px; margin: 1rem auto; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: #666;">
+          [ Game Board Coming Soon ]
+        </div>
+        <p>Race to square 100! But watch out for the snakes.</p>
+        <button class="btn btn-primary" style="font-size: 1.2rem; margin-top: 1rem;" disabled>Roll Dice</button>
+      </div>
+
+      <!-- LUDO TAB -->
+      <div id="tab-ludo" class="session-tab-content" style="display:none; padding: 2rem;">
+        <!-- Ludo Board gets rendered here -->
+      </div>
+
     </main>
     <div id="player-controls-container"></div>
   `;
@@ -67,6 +93,9 @@ export async function render() {
   renderNowPlaying(state.nowPlaying, state);
   renderQueueCarousel(state.queue || [], state);
   renderPlayerControls(state);
+  
+  // Render Board Games
+  renderLudoBoard(document.getElementById('tab-ludo'));
 
   attachSessionEvents();
   setupSocketListeners();
@@ -88,6 +117,22 @@ export async function render() {
 
   // Request full queue state from server
   getQueue(state.code);
+
+  // Switch to initial tab if provided
+  if (state.initialTab) {
+    switchTab('tab-' + state.initialTab);
+  }
+}
+
+function switchTab(targetId) {
+  document.querySelectorAll('.session-tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'btn-primary'));
+  
+  const targetEl = document.getElementById(targetId);
+  if (targetEl) targetEl.style.display = 'block';
+  
+  const btnEl = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
+  if (btnEl) btnEl.classList.add('active', 'btn-primary');
 }
 
 function attachSessionEvents() {
@@ -111,6 +156,13 @@ function attachSessionEvents() {
   btnSendChat?.addEventListener('click', handleSendChat);
   chatInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleSendChat();
+  });
+
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      switchTab(e.target.getAttribute('data-target'));
+    });
   });
 }
 
