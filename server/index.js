@@ -27,6 +27,14 @@ import {
 } from './managers/queue-manager.js';
 import { vote } from './managers/vote-manager.js';
 import { generateStats } from './managers/stats-manager.js';
+import {
+  initGame as ludoInitGame,
+  joinGame as ludoJoinGame,
+  leaveGame as ludoLeaveGame,
+  rollDice as ludoRollDice,
+  movePawn as ludoMovePawn,
+  getPublicState as ludoGetPublicState,
+} from './managers/ludo-manager.js';
 
 const PORT = process.env.PORT || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
@@ -166,6 +174,11 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     try {
+      const mapping = getUserBySocket(socket.id);
+      if (mapping) {
+        ludoLeaveGame(mapping.code, mapping.user.id);
+      }
+
       const result = leaveSession(socket.id);
       if (result) {
         const { code, session, user, ended, newHostId } = result;
@@ -384,6 +397,98 @@ io.on('connection', (socket) => {
       console.error('Get queue error:', err);
       socket.emit('error', { message: 'Failed to get queue' });
       callback?.({ success: false, error: 'Failed to get queue' });
+    }
+  });
+
+  // ─── Ludo ──────────────────────────────────────────────────────
+  socket.on('ludo_join', ({ code }, callback) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (!mapping || mapping.code !== code) {
+        callback?.({ success: false, error: 'Not in this session' });
+        return;
+      }
+
+      ludoInitGame(code);
+      const result = ludoJoinGame(code, mapping.user.id, mapping.user.name);
+      if (result.error) {
+        callback?.({ success: false, error: result.error });
+        return;
+      }
+
+      io.to(code).emit('ludo_state_update', {
+        ...ludoGetPublicState(code),
+        joinedColor: result.color,
+      });
+      callback?.({ success: true, color: result.color });
+      console.log(`${mapping.user.name} joined Ludo in ${code}`);
+    } catch (err) {
+      console.error('Ludo join error:', err);
+      callback?.({ success: false, error: 'Failed to join Ludo' });
+    }
+  });
+
+  socket.on('ludo_roll', ({ code }, callback) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (!mapping || mapping.code !== code) {
+        callback?.({ success: false, error: 'Not in this session' });
+        return;
+      }
+
+      const result = ludoRollDice(code, mapping.user.id);
+      if (result.error) {
+        callback?.({ success: false, error: result.error });
+        return;
+      }
+
+      io.to(code).emit('ludo_state_update', {
+        ...ludoGetPublicState(code),
+        lastRollResult: result,
+      });
+      callback?.({ success: true, ...result });
+    } catch (err) {
+      console.error('Ludo roll error:', err);
+      callback?.({ success: false, error: 'Failed to roll dice' });
+    }
+  });
+
+  socket.on('ludo_move', ({ code, pawnIndex }, callback) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (!mapping || mapping.code !== code) {
+        callback?.({ success: false, error: 'Not in this session' });
+        return;
+      }
+
+      const result = ludoMovePawn(code, mapping.user.id, pawnIndex);
+      if (result.error) {
+        callback?.({ success: false, error: result.error });
+        return;
+      }
+
+      io.to(code).emit('ludo_state_update', {
+        ...ludoGetPublicState(code),
+        lastMoveResult: result,
+      });
+      callback?.({ success: true, ...result });
+    } catch (err) {
+      console.error('Ludo move error:', err);
+      callback?.({ success: false, error: 'Failed to move pawn' });
+    }
+  });
+
+  socket.on('ludo_leave', ({ code }, callback) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (!mapping || mapping.code !== code) return;
+
+      ludoLeaveGame(code, mapping.user.id);
+      io.to(code).emit('ludo_state_update', ludoGetPublicState(code));
+      callback?.({ success: true });
+    } catch (err) {
+      console.error('Ludo leave error:', err);
+      callback?.({ success: false, error: 'Failed to leave Ludo' });
     }
   });
 });

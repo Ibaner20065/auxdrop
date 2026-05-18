@@ -10,7 +10,7 @@ import { openSearchModal } from '../components/search-modal.js';
 import { openYouTubeImportModal } from '../components/youtube-import.js';
 import { renderPlayerControls } from '../components/player-controls.js';
 import { openStatsModal } from '../components/stats-modal.js';
-import { renderLudoBoard } from '../components/ludo-board.js';
+import { renderLudoBoard, updateLudoBoard } from '../components/ludo-board.js';
 
 const SESSION_SELECTOR = '#view-session';
 let eventHandlers = [];
@@ -292,6 +292,10 @@ function setupSocketListeners() {
 
     chat_message: (message) => {
       appendChatMessage(message);
+    },
+
+    ludo_state_update: (gameState) => {
+      updateLudoBoard(gameState);
     },
   };
 

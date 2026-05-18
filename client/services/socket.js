@@ -159,6 +159,46 @@ export function moveSong(code, songId, direction) {
   });
 }
 
+export function ludoJoin(code) {
+  if (!socket) return Promise.reject('Not connected');
+  return new Promise((resolve) => {
+    socket.emit('ludo_join', { code }, (response) => {
+      resolve(response || { error: 'Failed to join Ludo' });
+    });
+    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+  });
+}
+
+export function ludoRoll(code) {
+  if (!socket) return Promise.reject('Not connected');
+  return new Promise((resolve) => {
+    socket.emit('ludo_roll', { code }, (response) => {
+      resolve(response || { error: 'Failed to roll' });
+    });
+    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+  });
+}
+
+export function ludoMove(code, pawnIndex) {
+  if (!socket) return Promise.reject('Not connected');
+  return new Promise((resolve) => {
+    socket.emit('ludo_move', { code, pawnIndex }, (response) => {
+      resolve(response || { error: 'Failed to move' });
+    });
+    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+  });
+}
+
+export function ludoLeave(code) {
+  if (!socket) return Promise.reject('Not connected');
+  return new Promise((resolve) => {
+    socket.emit('ludo_leave', { code }, (response) => {
+      resolve(response || { error: 'Failed to leave Ludo' });
+    });
+    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+  });
+}
+
 export function disconnect() {
   if (socket) {
     socket.disconnect();
