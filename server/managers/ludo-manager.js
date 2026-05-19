@@ -1,6 +1,6 @@
 const ludoGames = new Map();
 
-const COLORS = ['red', 'green', 'blue', 'yellow'];
+const COLORS = ['red', 'green', 'yellow', 'blue'];
 
 const PATH_SIZE = 52;
 const HOME_STRETCH_SIZE = 5;
@@ -9,15 +9,15 @@ const HOME_POSITION = 57;
 const ENTRY_POSITIONS = {
   red: 0,
   green: 13,
-  blue: 26,
-  yellow: 39,
+  yellow: 26,
+  blue: 39,
 };
 
 const HOME_STRETCH_ENTRY = {
   red: 51,
   green: 12,
-  blue: 25,
-  yellow: 38,
+  yellow: 25,
+  blue: 38,
 };
 
 const SAFE_SQUARES = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
@@ -134,10 +134,6 @@ export function joinGame(code, userId, userName) {
 
   const color = COLORS[game.players.length];
   game.players.push({ userId, color, name: userName });
-
-  if (game.players.length >= 2) {
-    game.status = 'playing';
-  }
 
   return { success: true, color, gameState: getPublicState(code, userId) };
 }
@@ -327,4 +323,16 @@ export function getGame(code) {
 export function getPlayerCount(code) {
   const game = ludoGames.get(code);
   return game ? game.players.length : 0;
+}
+
+export function startGame(code, userId) {
+  const game = ludoGames.get(code);
+  if (!game) return { error: 'Game not found' };
+  if (game.status !== 'waiting') return { error: 'Game already started' };
+  if (game.players.length < 2) return { error: 'Need at least 2 players' };
+  
+  // Optionally, check if user is host (since we don't have host info directly in ludoGames, 
+  // we rely on the socket endpoint to enforce it)
+  game.status = 'playing';
+  return { success: true, gameState: getPublicState(code) };
 }

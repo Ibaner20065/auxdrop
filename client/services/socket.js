@@ -169,6 +169,14 @@ export function ludoJoin(code) {
   });
 }
 
+export function ludoStart(code) {
+  return new Promise((resolve) => {
+    socket.emit('ludo_start', { code }, (response) => {
+      resolve(response || { error: 'Start request timed out' });
+    });
+  });
+}
+
 export function ludoRoll(code) {
   if (!socket) return Promise.reject('Not connected');
   return new Promise((resolve) => {

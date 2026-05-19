@@ -34,6 +34,7 @@ import {
   rollDice as ludoRollDice,
   movePawn as ludoMovePawn,
   getPublicState as ludoGetPublicState,
+  startGame as ludoStartGame,
 } from './managers/ludo-manager.js';
 
 const PORT = process.env.PORT || 3001;
@@ -425,6 +426,32 @@ io.on('connection', (socket) => {
     } catch (err) {
       console.error('Ludo join error:', err);
       callback?.({ success: false, error: 'Failed to join Ludo' });
+    }
+  });
+
+  socket.on('ludo_start', ({ code }, callback) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (!mapping || mapping.code !== code) {
+        callback?.({ success: false, error: 'Not in this session' });
+        return;
+      }
+      if (!isHost(code, mapping.user.id)) {
+        callback?.({ success: false, error: 'Only the host can start the game' });
+        return;
+      }
+
+      const result = ludoStartGame(code, mapping.user.id);
+      if (result.error) {
+        callback?.({ success: false, error: result.error });
+        return;
+      }
+
+      io.to(code).emit('ludo_state_update', ludoGetPublicState(code));
+      callback?.({ success: true });
+    } catch (err) {
+      console.error('Ludo start error:', err);
+      callback?.({ success: false, error: 'Failed to start game' });
     }
   });
 

@@ -727,11 +727,70 @@ body.dark-mode .chat-message {
   position: relative;
   box-sizing: border-box;
 }
-.ludo-base-red { background: #ff4444; border: var(--border-outset); border-color: #ff8888 #cc0000 #cc0000 #ff8888; }
-.ludo-base-green { background: #44ff44; border: var(--border-outset); border-color: #88ff88 #00cc00 #00cc00 #88ff88; }
-.ludo-base-blue { background: #4444ff; border: var(--border-outset); border-color: #8888ff #0000cc #0000cc #8888ff; }
-.ludo-base-yellow { background: #ffff44; border: var(--border-outset); border-color: #ffff88 #cccc00 #cccc00 #ffff88; }
-.ludo-home { background: #222; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+.ludo-base-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-outset);
+  box-sizing: border-box;
+}
+.base-red { background: #ff0000; border-color: #ff6666 #cc0000 #cc0000 #ff6666; }
+.base-green { background: #00ff00; border-color: #66ff66 #00cc00 #00cc00 #66ff66; }
+.base-blue { background: #0000ff; border-color: #6666ff #0000cc #0000cc #6666ff; }
+.base-yellow { background: #ffff00; border-color: #ffff66 #cccc00 #cccc00 #ffff66; }
+
+.ludo-base-inner {
+  width: 70%;
+  height: 70%;
+  background: white;
+  border: var(--border-inset);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.ludo-spot {
+  background: white;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  width: 100%;
+  height: 100%;
+}
+
+.base-red .ludo-spot { border-color: #ff0000; }
+.base-green .ludo-spot { border-color: #00ff00; }
+.base-blue .ludo-spot { border-color: #0000ff; }
+.base-yellow .ludo-spot { border-color: #ffff00; }
+
+.ludo-home-center {
+  width: 100%;
+  height: 100%;
+  /* Conic gradient to create 4 colored triangles meeting in the center */
+  background: conic-gradient(
+    from 45deg,
+    #00ff00 0deg 90deg,    /* Top (Green) */
+    #ffff00 90deg 180deg,  /* Right (Yellow) */
+    #0000ff 180deg 270deg, /* Bottom (Blue) */
+    #ff0000 270deg 360deg  /* Left (Red) */
+  );
+  border: var(--border-inset);
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Optional star in center */
+.ludo-home-center::after {
+  content: '🏠';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+}
+
 .ludo-path { background: #fff; }
 .ludo-path-red { background: #ffcccc; }
 .ludo-path-green { background: #ccffcc; }

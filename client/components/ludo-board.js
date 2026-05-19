@@ -1,4 +1,4 @@
-import { ludoJoin, ludoRoll, ludoMove } from '../services/socket.js';
+import { ludoJoin, ludoStart, ludoRoll, ludoMove } from '../services/socket.js';
 import App from '../main.js';
 
 let pawnElements = {};
@@ -24,22 +24,22 @@ const PATH = [
 const HOME_STRETCH = {
   red: [[7,1],[7,2],[7,3],[7,4],[7,5]],
   green: [[1,7],[2,7],[3,7],[4,7],[5,7]],
-  blue: [[7,13],[7,12],[7,11],[7,10],[7,9]],
-  yellow: [[13,7],[12,7],[11,7],[10,7],[9,7]]
+  yellow: [[7,13],[7,12],[7,11],[7,10],[7,9]],
+  blue: [[13,7],[12,7],[11,7],[10,7],[9,7]]
 };
 
 const BASE_PAWN_POSITIONS = {
   red: [[2,2],[2,3],[3,2],[3,3]],
   green: [[2,11],[2,12],[3,11],[3,12]],
-  blue: [[11,2],[11,3],[12,2],[12,3]],
-  yellow: [[11,11],[11,12],[12,11],[12,12]]
+  yellow: [[11,11],[11,12],[12,11],[12,12]],
+  blue: [[11,2],[11,3],[12,2],[12,3]]
 };
 
-const ENTRY_POSITIONS = { red: 0, green: 13, blue: 26, yellow: 39 };
+const ENTRY_POSITIONS = { red: 0, green: 13, yellow: 26, blue: 39 };
 const SAFE_SQUARES = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
 
-const COLORS = ['red', 'green', 'blue', 'yellow'];
-const COLOR_NAMES = { red: 'Red', green: 'Green', blue: 'Blue', yellow: 'Yellow' };
+const COLORS = ['red', 'green', 'yellow', 'blue'];
+const COLOR_NAMES = { red: 'Red', green: 'Green', yellow: 'Yellow', blue: 'Blue' };
 
 let currentGameState = null;
 let isRolling = false;
@@ -142,25 +142,63 @@ function drawBoard() {
   if (!boardEl) return;
   boardEl.innerHTML = '';
 
+  // Draw 4 corner bases
+  const bases = [
+    { color: 'red', r: 1, c: 1 },
+    { color: 'green', r: 1, c: 10 },
+    { color: 'blue', r: 10, c: 1 },
+    { color: 'yellow', r: 10, c: 10 }
+  ];
+
+  bases.forEach(b => {
+    const baseEl = document.createElement('div');
+    baseEl.className = `ludo-base-container base-${b.color}`;
+    baseEl.style.gridRow = `${b.r} / ${b.r + 6}`;
+    baseEl.style.gridColumn = `${b.c} / ${b.c + 6}`;
+    
+    // Create the inner white square with 4 circular spots
+    baseEl.innerHTML = `
+      <div class="ludo-base-inner">
+        <div class="ludo-spot"></div>
+        <div class="ludo-spot"></div>
+        <div class="ludo-spot"></div>
+        <div class="ludo-spot"></div>
+      </div>
+    `;
+    boardEl.appendChild(baseEl);
+  });
+
+  // Draw the center home triangles
+  const homeEl = document.createElement('div');
+  homeEl.className = 'ludo-home-center';
+  homeEl.style.gridRow = '7 / 10';
+  homeEl.style.gridColumn = '7 / 10';
+  boardEl.appendChild(homeEl);
+
+  // Draw the rest of the cells (paths)
   for (let row = 0; row < 15; row++) {
     for (let col = 0; col < 15; col++) {
+      // Skip the base areas (6x6 corners)
+      if ((row < 6 && col < 6) || 
+          (row < 6 && col > 8) || 
+          (row > 8 && col < 6) || 
+          (row > 8 && col > 8)) {
+        continue;
+      }
+      
+      // Skip the center home area (3x3 center)
+      if (row >= 6 && row <= 8 && col >= 6 && col <= 8) {
+        continue;
+      }
+
       const cell = document.createElement('div');
       cell.className = 'ludo-cell';
       cell.dataset.row = row;
       cell.dataset.col = col;
+      cell.style.gridRow = `${row + 1}`;
+      cell.style.gridColumn = `${col + 1}`;
 
-      if (row < 6 && col < 6) {
-        cell.classList.add('ludo-base-red');
-      } else if (row < 6 && col > 8) {
-        cell.classList.add('ludo-base-green');
-      } else if (row > 8 && col < 6) {
-        cell.classList.add('ludo-base-blue');
-      } else if (row > 8 && col > 8) {
-        cell.classList.add('ludo-base-yellow');
-      } else if (row >= 6 && row <= 8 && col >= 6 && col <= 8) {
-        cell.classList.add('ludo-home');
-        if (row === 7 && col === 7) cell.innerHTML = '🏠';
-      } else if (row === 7 && col >= 1 && col <= 5) {
+      if (row === 7 && col >= 1 && col <= 5) {
         cell.classList.add('ludo-path-red');
       } else if (col === 7 && row >= 1 && row <= 5) {
         cell.classList.add('ludo-path-green');
@@ -229,6 +267,16 @@ export function updateLudoBoard(gameState) {
       </button>`;
       document.getElementById('btn-ludo-join')?.addEventListener('click', async () => {
         const result = await ludoJoin(App.state.code);
+        if (result.error) {
+          msgEl.textContent = result.error;
+        }
+      });
+    } else if (hasJoined && App.state.isHost && gameState.players.length >= 2) {
+      joinArea.innerHTML = `<button class="btn btn-primary" id="btn-ludo-start" style="width:100%;padding:var(--space-3);font-size:1.1rem;background-color:var(--accent-green);">
+        🚀 Start Ludo Game
+      </button>`;
+      document.getElementById('btn-ludo-start')?.addEventListener('click', async () => {
+        const result = await ludoStart(App.state.code);
         if (result.error) {
           msgEl.textContent = result.error;
         }
