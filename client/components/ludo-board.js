@@ -1,10 +1,21 @@
 import { ludoJoin, ludoStart, ludoRoll, ludoMove } from '../services/socket.js';
 import App from '../main.js';
+import DiceRenderer from './dice-renderer.js';
+import PieceRenderer from './piece-renderer.js';
+import AnimationEngine from './animation-engine.js';
+import SoundManager from './sound-manager.js';
+import GameStateManager from './game-state-manager.js';
 
 let pawnElements = {};
 let previousPawns = null;
 let animatingPawns = new Set();
 
+// Initialize game systems
+let diceRenderer = null;
+let pieceRenderer = null;
+let animationEngine = null;
+let soundManager = null;
+let gameStateManager = null;
 
 const PATH = [
   [6,0],[6,1],[6,2],[6,3],[6,4],[6,5],
@@ -42,7 +53,6 @@ const COLORS = ['red', 'green', 'yellow', 'blue'];
 const COLOR_NAMES = { red: 'Red', green: 'Green', yellow: 'Yellow', blue: 'Blue' };
 
 let currentGameState = null;
-let isRolling = false;
 
 function getPawnGridPosition(color, pos, pawnIndex) {
   if (pos === -1) return BASE_PAWN_POSITIONS[color][pawnIndex];
@@ -105,36 +115,46 @@ function isMyTurn(gameState) {
 
 export function renderLudoBoard(container) {
   if (!container) return;
+
+  // Initialize game systems
+  diceRenderer = new DiceRenderer();
+  pieceRenderer = new PieceRenderer();
+  animationEngine = new AnimationEngine();
+  soundManager = new SoundManager();
+  gameStateManager = new GameStateManager(soundManager);
+
   container.innerHTML = `
     <div class="ludo-container">
       <div class="ludo-sidebar">
-        <div class="ludo-panel" style="background: var(--bg-primary); border: var(--border-outset); padding: var(--space-3);">
-          <h3 style="margin-top:0; font-family: var(--font-heading); text-transform: uppercase; font-size:1.1rem;">Ludo Console</h3>
-          <div id="ludo-players" style="margin-bottom: var(--space-3);"></div>
-          <div id="ludo-status" style="background: #fff; border: var(--border-inset); padding: var(--space-2); margin-bottom: var(--space-3); font-family: var(--font-mono); font-size: 0.9rem;">
+        <div class="ludo-panel" style="padding: 12px;">
+          <h3 style="margin-top:0; text-transform: uppercase; font-size:1.1rem;">Ludo Console</h3>
+          <div id="ludo-players" style="margin-bottom: 12px;"></div>
+          <div id="ludo-status" style="padding: 8px; margin-bottom: 12px; font-size: 0.9rem;">
             Loading...
           </div>
           <div id="ludo-join-area"></div>
-          <button class="btn btn-primary" id="btn-roll-dice" style="width: 100%; font-size: 1.2rem; padding: var(--space-3); font-weight: bold; display:none;">
+          <button class="btn btn-primary" id="btn-roll-dice" style="width: 100%; font-size: 1.2rem; padding: 12px; font-weight: bold; display:none;">
             🎲 ROLL DICE
           </button>
-          <div id="dice-result" style="text-align: center; font-size: 3rem; margin-top: 0.5rem; text-shadow: 2px 2px 0 #000; min-height: 3rem;">
+          <div id="dice-result" style="text-align: center; font-size: 3rem; margin-top: 8px; min-height: 3rem;">
             -
           </div>
-          <div id="ludo-message" style="font-family: var(--font-mono); font-size: 0.85rem; text-align: center; min-height: 1.5rem; color: var(--accent-red);"></div>
+          <div id="ludo-message" style="font-size: 0.85rem; text-align: center; min-height: 1.5rem; margin-top: 8px;"></div>
         </div>
       </div>
       <div class="ludo-board-wrapper" style="position: relative;">
         <div class="ludo-board" id="ludo-board"></div>
-        <div id="ludo-move-dialog" style="display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:var(--bg-elevated); padding:15px; border-radius:10px; border:var(--border-outset); z-index:100; text-align:center; min-width: 200px;">
-           <div style="font-family:var(--font-heading); margin-bottom:10px;">Which piece to move?</div>
+        <div id="ludo-move-dialog" style="display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); z-index:100; text-align:center; min-width: 200px;">
+           <div style="margin-bottom:10px;">Which piece to move?</div>
            <div id="ludo-move-options" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>
-           <button class="btn" onclick="document.getElementById('ludo-move-dialog').style.display='none'" style="margin-top:10px; padding:5px 10px; font-size:0.8rem;">Cancel</button>
+           <button class="btn" onclick="document.getElementById('ludo-move-dialog').style.display='none'" style="margin-top:10px; padding:8px 16px; font-size:0.8rem;">Cancel</button>
         </div>
       </div>
     </div>
   `;
+  
   drawBoard();
+  attachDiceRollListener();
 }
 
 function drawBoard() {
@@ -226,6 +246,11 @@ export function updateLudoBoard(gameState) {
   if (!gameState) return;
   currentGameState = gameState;
 
+  // Update game state manager
+  if (gameStateManager) {
+    gameStateManager.updateState(gameState);
+  }
+
   const myColor = getMyColor(gameState);
   const myTurn = isMyTurn(gameState);
   const statusEl = document.getElementById('ludo-status');
@@ -299,6 +324,10 @@ export function updateLudoBoard(gameState) {
     rollBtn.style.display = 'none';
     diceEl.textContent = '🏆';
     msgEl.textContent = '';
+    
+    // Play victory sound
+    if (soundManager) soundManager.playVictory();
+    
     renderAllPawns(gameState);
     return;
   }
@@ -348,6 +377,9 @@ function animateCapture(color, pawnIndex, fromPos, myColor) {
   animatingPawns.add(pawnId);
   const el = pawnElements[pawnId];
   if (!el) return;
+  
+  // Play capture sound
+  if (soundManager) soundManager.playCapture();
   
   el.style.transition = 'none';
   const displayColor = getMappedColor(color, myColor);
@@ -404,13 +436,18 @@ function handlePawnClick(pawnIndex) {
     if (result.error) {
       const msgEl = document.getElementById('ludo-message');
       if (msgEl) msgEl.textContent = result.error;
+      // Play invalid move sound
+      if (soundManager) soundManager.playInvalidMove();
+    } else {
+      // Play piece move sound on successful move
+      if (soundManager) soundManager.playPieceMove();
     }
   });
 }
 
 function renderAllPawns(gameState) {
   const boardEl = document.getElementById('ludo-board');
-  if (!boardEl) return;
+  if (!boardEl || !pieceRenderer) return;
   
   const myColor = getMyColor(gameState);
   const myTurn = isMyTurn(gameState);
@@ -453,24 +490,16 @@ function renderAllPawns(gameState) {
         continue;
       }
 
+      // Create piece if doesn't exist
       if (!el) {
-        el = document.createElement('div');
-        el.className = `ludo-pawn pawn-${displayColor}`;
-        el.dataset.pawnIndex = i;
-        el.dataset.originalColor = originalColor;
-        el.style.position = 'absolute';
-        el.style.transition = 'all 0.3s ease-in-out';
-        el.style.width = `calc(100% / 15)`;
-        el.style.height = `calc(100% / 15)`;
-        el.style.zIndex = 10;
+        el = pieceRenderer.createPiece(displayColor, i);
+        el.style.left = '0%';
+        el.style.top = '0%';
         boardEl.appendChild(el);
         pawnElements[pawnId] = el;
       }
 
       el.style.display = 'flex';
-      el.style.alignItems = 'center';
-      el.style.justifyContent = 'center';
-      el.className = `ludo-pawn pawn-${displayColor}`;
 
       const key = `${gridPos[0]}-${gridPos[1]}`;
       const occupants = squareOccupants[key];
@@ -480,32 +509,31 @@ function renderAllPawns(gameState) {
       let left = gridPos[1] * cellPct;
       let top = gridPos[0] * cellPct;
       let scale = 0.8;
-      let transformStr = `scale(${scale})`;
 
       if (occupants.length > 1 && pos !== -1 && pos !== 57) {
         const subIdx = occupantIdx % 4;
         const tx = (subIdx % 2 === 0) ? -20 : 20;
         const ty = (subIdx < 2) ? -20 : 20;
         scale = 0.55;
-        transformStr = `translate(${tx}%, ${ty}%) scale(${scale})`;
+        el.style.transform = `translate(${tx}%, ${ty}%) scale(${scale})`;
         el.innerHTML = `<span style="font-size:10px; color:white; font-weight:bold; text-shadow:1px 1px 0 #000;">${i + 1}</span>`;
       } else {
+        el.style.transform = `scale(${scale})`;
         el.innerHTML = '';
       }
 
       el.style.left = `${left}%`;
       el.style.top = `${top}%`;
-      el.style.transform = transformStr;
       
       // Interaction
       el.onclick = null;
       el.style.cursor = 'default';
-      el.style.boxShadow = 'none';
+      pieceRenderer.setMovableEffect(el, false);
       
       if (originalColor === myColor && selectable.includes(i)) {
-        el.style.cursor = 'pointer';
-        el.style.boxShadow = '0 0 0 3px yellow, 2px 2px 0 rgba(0,0,0,0.3)';
-        el.style.zIndex = 15;
+        pieceRenderer.setMovableEffect(el, true);
+        el.addEventListener('mouseover', () => pieceRenderer.setHoverEffect(el, true));
+        el.addEventListener('mouseout', () => pieceRenderer.setHoverEffect(el, false));
         
         el.onclick = (e) => {
           e.stopPropagation();
@@ -518,8 +546,6 @@ function renderAllPawns(gameState) {
             handlePawnClick(i);
           }
         };
-      } else {
-        el.style.zIndex = 10;
       }
     }
   }
@@ -532,53 +558,74 @@ function clearPawns() {
   pawnElements = {};
 }
 
-// Attach dice roll event once on first render
-document.addEventListener('click', (e) => {
-  if (e.target.id === 'btn-roll-dice') {
-    if (isRolling) return;
-    isRolling = true;
+/**
+ * Attach dice roll event listener
+ */
+function attachDiceRollListener() {
+  document.addEventListener('click', handleDiceRollClick, true);
+}
 
-    const btn = e.target;
-    const diceEl = document.getElementById('dice-result');
-    const msgEl = document.getElementById('ludo-message');
+/**
+ * Handle dice roll button click
+ */
+function handleDiceRollClick(e) {
+  if (e.target.id !== 'btn-roll-dice') return;
+  if (!diceRenderer || diceRenderer.isCurrentlyRolling()) return;
 
-    btn.disabled = true;
-    btn.textContent = '🎲 Rolling...';
+  const btn = e.target;
+  const msgEl = document.getElementById('ludo-message');
 
-    let rolls = 0;
-    const rollInterval = setInterval(() => {
-      diceEl.textContent = Math.floor(Math.random() * 6) + 1;
-      rolls++;
-      if (rolls > 10) {
-        clearInterval(rollInterval);
+  // Disable button and start roll animation
+  btn.disabled = true;
+  btn.textContent = '🎲 Rolling...';
 
-        ludoRoll(App.state.code).then(result => {
-          isRolling = false;
-          btn.disabled = false;
-          btn.textContent = '🎲 ROLL DICE';
+  // Play dice roll sound
+  soundManager.playDiceRoll();
 
-          if (result.error) {
-            if (msgEl) msgEl.textContent = result.error;
-            return;
-          }
+  // Start dice animation
+  diceRenderer.rollDice(async (finalValue) => {
+    // Send roll to server
+    ludoRoll(App.state.code).then(result => {
+      btn.disabled = false;
+      btn.textContent = '🎲 ROLL DICE';
 
-          if (result.threeSixes) {
-            if (msgEl) msgEl.textContent = 'Three 6s in a row! Turn lost!';
-            return;
-          }
-
-          if (result.noMoves) {
-            if (msgEl) msgEl.textContent = `Rolled ${result.value} — No valid moves`;
-            return;
-          }
-
-          diceEl.textContent = result.value;
-        }).catch(() => {
-          isRolling = false;
-          btn.disabled = false;
-          btn.textContent = '🎲 ROLL DICE';
-        });
+      if (result.error) {
+        if (msgEl) msgEl.textContent = result.error;
+        soundManager.playInvalidMove();
+        return;
       }
-    }, 50);
-  }
-});
+
+      if (result.threeSixes) {
+        if (msgEl) msgEl.textContent = 'Three 6s in a row! Turn lost!';
+        soundManager.playInvalidMove();
+        return;
+      }
+
+      if (result.noMoves) {
+        if (msgEl) msgEl.textContent = `Rolled ${result.value} — No valid moves`;
+        soundManager.playInvalidMove();
+        return;
+      }
+
+      // Play turn notification sound
+      soundManager.playTurnNotification();
+      
+      if (msgEl) {
+        if (result.value === 6) {
+          msgEl.textContent = `You rolled a 6! Extra turn. Select a piece to move or bring new piece out.`;
+        } else {
+          msgEl.textContent = `You rolled ${result.value}! Select a piece to move.`;
+        }
+      }
+    }).catch(() => {
+      btn.disabled = false;
+      btn.textContent = '🎲 ROLL DICE';
+      soundManager.playInvalidMove();
+    });
+  });
+}
+
+// Initialize sounds on user interaction
+document.addEventListener('click', () => {
+  if (soundManager) soundManager.resumeContext();
+}, { once: true });

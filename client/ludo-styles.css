@@ -1,0 +1,521 @@
+/* ================================ */
+/* GENERAL ANIMATIONS & EFFECTS */
+/* ================================ */
+
+@keyframes board-load {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ludo-board-wrapper {
+  animation: board-load 0.6s ease-out;
+}
+
+@keyframes dialog-slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ================================ */
+/* DICE SYSTEM STYLES */
+/* ================================ */
+
+.dice-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  perspective: 1000px;
+}
+
+.dice-3d-wrapper {
+  width: 120px;
+  height: 120px;
+  perspective: 1200px;
+}
+
+.dice-3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dice-face {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, #ff6b6b, #cc0000);
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.3), inset 2px 2px 5px rgba(255, 255, 255, 0.2);
+  backface-visibility: hidden;
+}
+
+.dice-face-1 { transform: translateZ(60px); }
+.dice-face-2 { transform: rotateY(90deg) translateZ(60px); }
+.dice-face-3 { transform: rotateY(-90deg) translateZ(60px); }
+.dice-face-4 { transform: rotateY(180deg) translateZ(60px); }
+.dice-face-5 { transform: rotateX(90deg) translateZ(60px); }
+.dice-face-6 { transform: rotateX(-90deg) translateZ(60px); }
+
+.dice-display {
+  font-size: 3rem;
+  font-weight: bold;
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 0 10px rgba(255, 100, 100, 0.5);
+}
+
+@keyframes dice-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes dice-glow-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 100, 0, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(255, 100, 0, 0.7); }
+}
+
+.dice-glow {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+/* ================================ */
+/* 3D PIECE STYLES */
+/* ================================ */
+
+.ludo-piece-3d {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  transition: all 0.3s ease-in-out;
+}
+
+/* Red Piece */
+.pawn-red {
+  background: radial-gradient(circle at 30% 30%, #ff7777, #dd0000);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.3);
+}
+
+.pawn-red:hover {
+  background: radial-gradient(circle at 30% 30%, #ff9999, #ee0000);
+  box-shadow: 
+    0 4px 8px rgba(255, 50, 50, 0.4),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.4),
+    0 0 15px rgba(255, 100, 100, 0.5);
+}
+
+/* Green Piece */
+.pawn-green {
+  background: radial-gradient(circle at 30% 30%, #77ff77, #00dd00);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.3);
+}
+
+.pawn-green:hover {
+  background: radial-gradient(circle at 30% 30%, #99ff99, #00ee00);
+  box-shadow: 
+    0 4px 8px rgba(50, 255, 50, 0.4),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.4),
+    0 0 15px rgba(100, 255, 100, 0.5);
+}
+
+/* Yellow Piece */
+.pawn-yellow {
+  background: radial-gradient(circle at 30% 30%, #ffff99, #ffdd00);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.2);
+  color: #333;
+}
+
+.pawn-yellow:hover {
+  background: radial-gradient(circle at 30% 30%, #ffffbb, #ffee00);
+  box-shadow: 
+    0 4px 8px rgba(255, 255, 50, 0.4),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.4),
+    0 0 15px rgba(255, 255, 100, 0.5);
+}
+
+/* Blue Piece */
+.pawn-blue {
+  background: radial-gradient(circle at 30% 30%, #7777ff, #0000dd);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.3);
+}
+
+.pawn-blue:hover {
+  background: radial-gradient(circle at 30% 30%, #9999ff, #0000ee);
+  box-shadow: 
+    0 4px 8px rgba(50, 50, 255, 0.4),
+    inset -1px -1px 3px rgba(0, 0, 0, 0.3),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.4),
+    0 0 15px rgba(100, 100, 255, 0.5);
+}
+
+/* ================================ */
+/* PIECE INTERACTION & ANIMATIONS */
+/* ================================ */
+
+@keyframes piece-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes piece-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.3);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.5);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes piece-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* Piece Hover Effects */
+.ludo-piece-3d:hover {
+  filter: brightness(1.1) drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+  animation: piece-float 1.5s ease-in-out infinite;
+}
+
+/* ================================ */
+/* MODERN UI ENHANCEMENTS */
+/* ================================ */
+
+/* Dark Arcade Theme */
+.ludo-container {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.ludo-sidebar {
+  background: linear-gradient(180deg, #0f3460 0%, #16213e 100%);
+  border-right: 2px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.ludo-panel {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+  border: 2px solid rgba(0, 255, 255, 0.3) !important;
+  box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.ludo-panel h3 {
+  color: #00ffff;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.ludo-board-wrapper {
+  background: radial-gradient(ellipse at center, #0a0e27 0%, #000000 100%);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 255, 255, 0.1);
+}
+
+.ludo-board {
+  background: linear-gradient(45deg, #1a1a2e 25%, #0f3460 25%, #0f3460 50%, #1a1a2e 50%, #1a1a2e 75%, #0f3460 75%, #0f3460);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
+/* Status and Message Styling */
+#ludo-status {
+  background: linear-gradient(135deg, #0f3460 0%, #16213e 100%) !important;
+  border: 2px solid rgba(0, 255, 255, 0.3) !important;
+  color: #00ffff;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+  font-weight: bold;
+  box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.1);
+}
+
+#ludo-message {
+  color: #ff6b6b;
+  text-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+  font-weight: bold;
+}
+
+/* Button Styling */
+.btn {
+  background: linear-gradient(135deg, #00ffff 0%, #00aaaa 100%);
+  color: #000;
+  border: 2px solid rgba(0, 200, 200, 0.5);
+  border-radius: 6px;
+  font-weight: bold;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 255, 255, 0.5);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(0, 255, 255, 0.3);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ff6b6b 0%, #cc0000 100%);
+  color: white;
+  border-color: rgba(255, 107, 107, 0.5);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.5);
+}
+
+/* Player List Styling */
+#ludo-players {
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 0.9rem;
+}
+
+#ludo-players > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  transition: all 0.2s ease;
+}
+
+#ludo-players > div:hover {
+  padding-left: 4px;
+  color: #00ffff;
+}
+
+/* Glow effects for active player */
+#ludo-players > div[style*="font-weight:bold"] {
+  color: #00ff00;
+  text-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0.05));
+  margin-left: -6px;
+  padding-left: 10px;
+  border-left: 3px solid #00ff00;
+  animation: player-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes player-pulse {
+  0%, 100% { background: linear-gradient(90deg, rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0.05)); }
+  50% { background: linear-gradient(90deg, rgba(0, 255, 0, 0.2), rgba(0, 255, 0, 0.1)); }
+}
+
+/* Dice Result Display */
+#dice-result {
+  color: #ffff00;
+  text-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+  font-weight: bold;
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+}
+
+/* Move Dialog Styling */
+#ludo-move-dialog {
+  background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+  border: 2px solid rgba(0, 255, 255, 0.5);
+  border-radius: 12px;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.05);
+  padding: 20px;
+  animation: dialog-slide-up 0.3s ease-out;
+}
+
+#ludo-move-dialog > div:first-child {
+  color: #00ffff;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  font-weight: bold;
+}
+
+#ludo-move-options {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#ludo-move-options .btn {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+/* Board Cell Styling */
+.ludo-cell {
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, rgba(15, 52, 96, 0.2), rgba(22, 33, 62, 0.2));
+  position: relative;
+}
+
+.ludo-cell:hover {
+  background: rgba(0, 255, 255, 0.08);
+  box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.1);
+}
+
+/* Safe squares indicator */
+.ludo-cell:has(⭐) {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.08));
+  box-shadow: inset 0 0 5px rgba(255, 215, 0, 0.2);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.ludo-base-container {
+  background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+  border: 2px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.05);
+}
+
+.ludo-base-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 8px;
+}
+
+.ludo-spot {
+  background: radial-gradient(circle at 30% 30%, rgba(200, 200, 200, 0.3), rgba(100, 100, 100, 0.1));
+  border: 1px solid rgba(0, 255, 255, 0.15);
+  border-radius: 50%;
+  aspect-ratio: 1;
+  box-shadow: inset -1px -1px 2px rgba(0, 0, 0, 0.3), inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+.ludo-home-center {
+  background: radial-gradient(circle, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.02));
+  border: 2px dashed rgba(0, 255, 255, 0.3);
+  border-radius: 50%;
+  box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+/* Path Colors */
+.ludo-path-red {
+  background: linear-gradient(135deg, rgba(255, 100, 100, 0.15), rgba(200, 50, 50, 0.08));
+  border-left: 2px solid rgba(255, 100, 100, 0.3);
+}
+
+.ludo-path-green {
+  background: linear-gradient(135deg, rgba(100, 255, 100, 0.15), rgba(50, 200, 50, 0.08));
+  border-bottom: 2px solid rgba(100, 255, 100, 0.3);
+}
+
+.ludo-path-yellow {
+  background: linear-gradient(135deg, rgba(255, 255, 100, 0.15), rgba(200, 200, 50, 0.08));
+  border-right: 2px solid rgba(255, 255, 100, 0.3);
+}
+
+.ludo-path-blue {
+  background: linear-gradient(135deg, rgba(100, 100, 255, 0.15), rgba(50, 50, 200, 0.08));
+  border-top: 2px solid rgba(100, 100, 255, 0.3);
+}
+
+/* ================================ */
+/* RESPONSIVE DESIGN */
+/* ================================ */
+
+@media (max-width: 1024px) {
+  .ludo-container {
+    flex-direction: column;
+  }
+
+  .ludo-sidebar {
+    border-right: none;
+    border-bottom: 2px solid rgba(0, 255, 255, 0.2);
+  }
+}
+
+@media (max-width: 768px) {
+  .dice-container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .dice-3d-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+
+  .dice-face {
+    width: 80px;
+    height: 80px;
+    font-size: 1.8rem;
+  }
+
+  .dice-face-1 { transform: translateZ(40px); }
+  .dice-face-2 { transform: rotateY(90deg) translateZ(40px); }
+  .dice-face-3 { transform: rotateY(-90deg) translateZ(40px); }
+  .dice-face-4 { transform: rotateY(180deg) translateZ(40px); }
+  .dice-face-5 { transform: rotateX(90deg) translateZ(40px); }
+  .dice-face-6 { transform: rotateX(-90deg) translateZ(40px); }
+
+  #dice-result {
+    font-size: 2rem;
+    min-height: 3rem;
+  }
+}
