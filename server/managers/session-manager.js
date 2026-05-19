@@ -21,7 +21,7 @@ function formatUserList(userMap) {
   }));
 }
 
-export function createSession(hostName = 'Host') {
+export function createSession(hostName = 'Host', partyType = 'music') {
   let code;
   do {
     code = generateCode();
@@ -32,6 +32,7 @@ export function createSession(hostName = 'Host') {
     code,
     hostId,
     users: new Map([[hostId, { id: hostId, name: hostName, isHost: true, joinedAt: Date.now() }]]),
+    partyType,
     createdAt: Date.now(),
     lastActivity: Date.now(),
     nowPlaying: null,
@@ -102,6 +103,7 @@ export function getSessionPublic(code) {
   return {
     code: session.code,
     hostId: session.hostId,
+    partyType: session.partyType,
     users: formatUserList(session.users),
     createdAt: session.createdAt,
     nowPlaying: session.nowPlaying,

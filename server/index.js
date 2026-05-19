@@ -61,9 +61,9 @@ io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
 
   // ─── Create Session ────────────────────────────────────────────
-  socket.on('create_session', ({ userName }, callback) => {
+  socket.on('create_session', ({ userName, partyType }, callback) => {
     try {
-      const { code, hostId, session } = createSession(userName || 'Host');
+      const { code, hostId, session } = createSession(userName || 'Host', partyType);
       registerSocket(socket.id, code, hostId);
       socket.join(code);
       
@@ -119,6 +119,7 @@ io.on('connection', (socket) => {
         code: normalizedCode,
         hostId: publicSession.hostId,
         isHost: false,
+        partyType: publicSession.partyType,
         users: publicSession.users || [],
         nowPlaying: publicSession.nowPlaying || null,
         queue: queue || [],

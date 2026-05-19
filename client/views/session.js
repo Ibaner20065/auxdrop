@@ -1,5 +1,5 @@
 import App from '../main.js';
-import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect, joinSession, sendChatMessage } from '../services/socket.js';
+import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect, joinSession, sendChatMessage, ludoJoin } from '../services/socket.js';
 import { initPlayer, loadSong } from '../services/player.js';
 import { showNotification } from '../components/notifications.js';
 import { renderNowPlaying } from '../components/now-playing.js';
@@ -121,6 +121,13 @@ export async function render() {
   // Switch to initial tab if provided
   if (state.initialTab) {
     switchTab('tab-' + state.initialTab);
+    
+    // Auto-join if it's a dedicated ludo party
+    if (state.initialTab === 'ludo') {
+      setTimeout(() => {
+        ludoJoin(state.code).catch(err => console.error("Auto-join Ludo failed:", err));
+      }, 500); // slight delay to let socket establish fully
+    }
   }
 }
 

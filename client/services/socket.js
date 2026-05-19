@@ -51,10 +51,10 @@ export function getSocket() {
   return socket;
 }
 
-export function createSession(userName) {
+export function createSession(userName, partyType = 'music') {
   if (!socket) connect();
   return new Promise((resolve) => {
-    socket.emit('create_session', { userName }, (response) => {
+    socket.emit('create_session', { userName, partyType }, (response) => {
       if (response?.success) {
         resolve(response);
       } else {

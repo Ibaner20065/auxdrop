@@ -98,7 +98,7 @@ async function handleCreate(initialTab, buttonElement) {
 
   connect();
 
-  const result = await createSession(userName);
+  const result = await createSession(userName, initialTab);
 
   if (result.error) {
     showNotification('error', result.error);
@@ -151,6 +151,7 @@ async function handleJoin() {
     userName,
     users: result.users || [],
     nowPlaying: result.nowPlaying || null,
+    initialTab: result.partyType,
   });
 }
 
