@@ -1,6 +1,11 @@
 import { ludoJoin, ludoRoll, ludoMove } from '../services/socket.js';
 import App from '../main.js';
 
+let pawnElements = {};
+let previousPawns = null;
+let animatingPawns = new Set();
+
+
 const PATH = [
   [6,0],[6,1],[6,2],[6,3],[6,4],[6,5],
   [5,6],[4,6],[3,6],[2,6],[1,6],
@@ -86,6 +91,14 @@ function getMyColor(gameState) {
   return me ? me.color : null;
 }
 
+function getMappedColor(originalColor, myColor) {
+  if (!myColor) return originalColor;
+  const cIdx = COLORS.indexOf(originalColor);
+  const myIdx = COLORS.indexOf(myColor);
+  const mappedIdx = (cIdx - myIdx + 4) % 4;
+  return COLORS[mappedIdx];
+}
+
 function isMyTurn(gameState) {
   return gameState?.currentPlayerId === App.state.userId;
 }
@@ -111,8 +124,13 @@ export function renderLudoBoard(container) {
           <div id="ludo-message" style="font-family: var(--font-mono); font-size: 0.85rem; text-align: center; min-height: 1.5rem; color: var(--accent-red);"></div>
         </div>
       </div>
-      <div class="ludo-board-wrapper">
+      <div class="ludo-board-wrapper" style="position: relative;">
         <div class="ludo-board" id="ludo-board"></div>
+        <div id="ludo-move-dialog" style="display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:var(--bg-elevated); padding:15px; border-radius:10px; border:var(--border-outset); z-index:100; text-align:center; min-width: 200px;">
+           <div style="font-family:var(--font-heading); margin-bottom:10px;">Which piece to move?</div>
+           <div id="ludo-move-options" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>
+           <button class="btn" onclick="document.getElementById('ludo-move-dialog').style.display='none'" style="margin-top:10px; padding:5px 10px; font-size:0.8rem;">Cancel</button>
+        </div>
       </div>
     </div>
   `;
@@ -260,22 +278,71 @@ export function updateLudoBoard(gameState) {
     diceEl.textContent = gameState.diceValue;
   }
 
-  msgEl.textContent = '';
+  // Check for captured pawns to animate
+  if (previousPawns && gameState.status === 'playing') {
+    for (const c of COLORS) {
+      for (let i = 0; i < 4; i++) {
+        const oldPos = previousPawns[c][i];
+        const newPos = gameState.pawns[c][i];
+        if (oldPos >= 0 && oldPos <= 56 && newPos === -1) {
+          animateCapture(c, i, oldPos, myColor);
+        }
+      }
+    }
+  }
+  previousPawns = JSON.parse(JSON.stringify(gameState.pawns));
 
   renderAllPawns(gameState);
+}
 
-  // Handle pawn clicking for moves
-  if (myTurn && gameState.diceValue !== null) {
-    const selectable = getValidMoves(gameState.pawns, myColor, gameState.diceValue);
-    document.querySelectorAll('.ludo-pawn').forEach(el => {
-      const idx = parseInt(el.dataset.pawnIndex);
-      if (selectable.includes(idx)) {
-        el.style.cursor = 'pointer';
-        el.style.boxShadow = '0 0 0 3px yellow, 2px 2px 0 rgba(0,0,0,0.3)';
-        el.addEventListener('click', () => handlePawnClick(idx));
-      }
-    });
-  }
+function animateCapture(color, pawnIndex, fromPos, myColor) {
+  const pawnId = `${color}-${pawnIndex}`;
+  animatingPawns.add(pawnId);
+  const el = pawnElements[pawnId];
+  if (!el) return;
+  
+  el.style.transition = 'none';
+  const displayColor = getMappedColor(color, myColor);
+  let currentPos = fromPos;
+  
+  const interval = setInterval(() => {
+    currentPos--;
+    if (currentPos < 0) {
+      clearInterval(interval);
+      animatingPawns.delete(pawnId);
+      el.style.transition = 'all 0.3s ease-in-out';
+      renderAllPawns(currentGameState);
+      return;
+    }
+    const gridPos = getPawnGridPosition(displayColor, currentPos, pawnIndex);
+    if (gridPos) {
+      const cellPct = 100 / 15;
+      el.style.left = `${gridPos[1] * cellPct}%`;
+      el.style.top = `${gridPos[0] * cellPct}%`;
+      el.style.transform = 'scale(1)';
+      el.style.zIndex = 20;
+    }
+  }, 30);
+}
+
+function showMoveDialog(movablePawns) {
+  const dialog = document.getElementById('ludo-move-dialog');
+  const options = document.getElementById('ludo-move-options');
+  if (!dialog || !options) return;
+  
+  options.innerHTML = '';
+  movablePawns.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary';
+    btn.textContent = `Piece ${p.index + 1}`;
+    btn.onclick = () => {
+      dialog.style.display = 'none';
+      handlePawnClick(p.index);
+    };
+    options.appendChild(btn);
+  });
+  
+  dialog.style.display = 'block';
 }
 
 function handlePawnClick(pawnIndex) {
@@ -294,47 +361,127 @@ function handlePawnClick(pawnIndex) {
 }
 
 function renderAllPawns(gameState) {
-  clearPawns();
+  const boardEl = document.getElementById('ludo-board');
+  if (!boardEl) return;
+  
+  const myColor = getMyColor(gameState);
+  const myTurn = isMyTurn(gameState);
+  const selectable = (myTurn && gameState.diceValue !== null) 
+      ? getValidMoves(gameState.pawns, myColor, gameState.diceValue) 
+      : [];
 
-  for (const color of COLORS) {
-    const pawns = gameState.pawns[color];
+  const squareOccupants = {};
+  
+  // Calculate overlaps
+  for (const originalColor of COLORS) {
+    const pawns = gameState.pawns[originalColor];
     if (!pawns) continue;
+    const displayColor = getMappedColor(originalColor, myColor);
     for (let i = 0; i < pawns.length; i++) {
       const pos = pawns[i];
-      const gridPos = getPawnGridPosition(color, pos, i);
+      const gridPos = getPawnGridPosition(displayColor, pos, i);
       if (!gridPos) continue;
-      drawPawn(gridPos[0], gridPos[1], color, i);
+      const key = `${gridPos[0]}-${gridPos[1]}`;
+      if (!squareOccupants[key]) squareOccupants[key] = [];
+      squareOccupants[key].push({ originalColor, index: i, pos, displayColor });
+    }
+  }
+
+  for (const originalColor of COLORS) {
+    const pawns = gameState.pawns[originalColor];
+    if (!pawns) continue;
+    const displayColor = getMappedColor(originalColor, myColor);
+
+    for (let i = 0; i < pawns.length; i++) {
+      const pawnId = `${originalColor}-${i}`;
+      if (animatingPawns.has(pawnId)) continue;
+      
+      const pos = pawns[i];
+      const gridPos = getPawnGridPosition(displayColor, pos, i);
+      
+      let el = pawnElements[pawnId];
+      if (!gridPos) {
+        if (el) el.style.display = 'none';
+        continue;
+      }
+
+      if (!el) {
+        el = document.createElement('div');
+        el.className = `ludo-pawn pawn-${displayColor}`;
+        el.dataset.pawnIndex = i;
+        el.dataset.originalColor = originalColor;
+        el.style.position = 'absolute';
+        el.style.transition = 'all 0.3s ease-in-out';
+        el.style.width = `calc(100% / 15)`;
+        el.style.height = `calc(100% / 15)`;
+        el.style.zIndex = 10;
+        boardEl.appendChild(el);
+        pawnElements[pawnId] = el;
+      }
+
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.className = `ludo-pawn pawn-${displayColor}`;
+
+      const key = `${gridPos[0]}-${gridPos[1]}`;
+      const occupants = squareOccupants[key];
+      const occupantIdx = occupants.findIndex(o => o.originalColor === originalColor && o.index === i);
+      
+      const cellPct = 100 / 15;
+      let left = gridPos[1] * cellPct;
+      let top = gridPos[0] * cellPct;
+      let scale = 0.8;
+      let transformStr = `scale(${scale})`;
+
+      if (occupants.length > 1 && pos !== -1 && pos !== 57) {
+        const subIdx = occupantIdx % 4;
+        const tx = (subIdx % 2 === 0) ? -20 : 20;
+        const ty = (subIdx < 2) ? -20 : 20;
+        scale = 0.55;
+        transformStr = `translate(${tx}%, ${ty}%) scale(${scale})`;
+        el.innerHTML = `<span style="font-size:10px; color:white; font-weight:bold; text-shadow:1px 1px 0 #000;">${i + 1}</span>`;
+      } else {
+        el.innerHTML = '';
+      }
+
+      el.style.left = `${left}%`;
+      el.style.top = `${top}%`;
+      el.style.transform = transformStr;
+      
+      // Interaction
+      el.onclick = null;
+      el.style.cursor = 'default';
+      el.style.boxShadow = 'none';
+      
+      if (originalColor === myColor && selectable.includes(i)) {
+        el.style.cursor = 'pointer';
+        el.style.boxShadow = '0 0 0 3px yellow, 2px 2px 0 rgba(0,0,0,0.3)';
+        el.style.zIndex = 15;
+        
+        el.onclick = (e) => {
+          e.stopPropagation();
+          if (!myTurn || gameState.diceValue === null) return;
+          
+          const myMovableOnThisCell = occupants.filter(o => o.originalColor === myColor && selectable.includes(o.index));
+          if (myMovableOnThisCell.length > 1) {
+            showMoveDialog(myMovableOnThisCell);
+          } else {
+            handlePawnClick(i);
+          }
+        };
+      } else {
+        el.style.zIndex = 10;
+      }
     }
   }
 }
 
 function clearPawns() {
-  document.querySelectorAll('.ludo-pawn').forEach(el => el.remove());
-}
-
-function drawPawn(row, col, color, pawnIndex) {
-  const boardEl = document.getElementById('ludo-board');
-  if (!boardEl) return;
-
-  const cell = boardEl.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-  if (!cell) return;
-
-  const existing = cell.querySelectorAll('.ludo-pawn');
-  const offset = existing.length;
-
-  const pawn = document.createElement('div');
-  pawn.className = `ludo-pawn pawn-${color}`;
-  pawn.dataset.pawnIndex = pawnIndex;
-  pawn.dataset.color = color;
-
-  if (offset > 0) {
-    pawn.style.top = `${10 + offset * 20}%`;
-    pawn.style.left = `${10 + offset * 20}%`;
-    pawn.style.width = '60%';
-    pawn.style.height = '60%';
-  }
-
-  cell.appendChild(pawn);
+  Object.values(pawnElements).forEach(el => {
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  });
+  pawnElements = {};
 }
 
 // Attach dice roll event once on first render
