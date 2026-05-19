@@ -18,6 +18,18 @@ const App = {
   init() {
     this.showView('landing');
     window.__auxdrop = this;
+    
+    // Mobile Detection
+    this.checkMobile();
+    window.addEventListener('resize', () => this.checkMobile());
+  },
+
+  checkMobile() {
+    if (window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      document.body.classList.add('is-mobile');
+    } else {
+      document.body.classList.remove('is-mobile');
+    }
   },
 
   showView(viewName) {

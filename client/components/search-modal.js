@@ -1,4 +1,4 @@
-import { searchSongs } from '../services/youtube-search.js';
+import { searchSongs, getVideoDetails } from '../services/youtube-search.js';
 
 let onAddCallback = null;
 let searchTimeout = null;
@@ -21,7 +21,7 @@ export function openSearchModal(onAdd) {
           type="text"
           class="input"
           id="search-input"
-          placeholder="Enter song name or artist..."
+          placeholder="Search by name, artist, or paste YouTube link..."
           style="margin:0;"
           autofocus
         >
@@ -71,7 +71,18 @@ async function performSearch(query) {
   const resultsContainer = document.getElementById('search-results');
   resultsContainer.innerHTML = '<div class="search-loading">Searching...</div>';
 
-  const results = await searchSongs(query);
+  let results = [];
+  
+  // Check if query is a direct YouTube URL
+  const ytMatch = query.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  if (ytMatch && ytMatch[1]) {
+    const videoDetails = await getVideoDetails(ytMatch[1]);
+    if (videoDetails) {
+      results = [videoDetails];
+    }
+  } else {
+    results = await searchSongs(query);
+  }
 
   if (results.length === 0) {
     resultsContainer.innerHTML = '<div style="padding:16px; text-align:center;">No results found. Try a different search.</div>';

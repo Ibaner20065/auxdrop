@@ -61,7 +61,7 @@ export function createSession(userName) {
         resolve({ error: response?.error || 'Failed to create session' });
       }
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -75,7 +75,7 @@ export function joinSession(code, userName) {
         resolve({ error: response?.error || 'Failed to join session' });
       }
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -85,7 +85,7 @@ export function getSessionState(code) {
     socket.emit('get_session_state', { code }, (response) => {
       resolve(response || { error: 'Failed to get session state' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -95,7 +95,7 @@ export function addSong(code, song) {
     socket.emit('add_song', { code, song }, (response) => {
       resolve(response || { error: 'Failed to add song' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -105,7 +105,7 @@ export function voteSong(code, songId, direction) {
     socket.emit('vote_song', { code, songId, direction }, (response) => {
       resolve(response || { error: 'Failed to vote' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -115,7 +115,7 @@ export function skipCurrent(code) {
     socket.emit('skip_current', { code }, (response) => {
       resolve(response || { error: 'Failed to skip' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -125,7 +125,7 @@ export function songEnded(code, songId) {
     socket.emit('song_ended', { code, songId }, (response) => {
       resolve(response || { error: 'Failed to update song status' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -135,7 +135,7 @@ export function sendChatMessage(code, text) {
     socket.emit('send_chat_message', { code, text }, (response) => {
       resolve(response || { error: 'Failed to send message' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -145,7 +145,7 @@ export function getQueue(code) {
     socket.emit('get_queue', { code }, (response) => {
       resolve(response || { error: 'Failed to get queue' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -155,7 +155,7 @@ export function moveSong(code, songId, direction) {
     socket.emit('move_song', { code, songId, direction }, (response) => {
       resolve(response || { error: 'Failed to move song' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -165,7 +165,7 @@ export function ludoJoin(code) {
     socket.emit('ludo_join', { code }, (response) => {
       resolve(response || { error: 'Failed to join Ludo' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -175,7 +175,7 @@ export function ludoRoll(code) {
     socket.emit('ludo_roll', { code }, (response) => {
       resolve(response || { error: 'Failed to roll' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -185,7 +185,7 @@ export function ludoMove(code, pawnIndex) {
     socket.emit('ludo_move', { code, pawnIndex }, (response) => {
       resolve(response || { error: 'Failed to move' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 
@@ -195,7 +195,7 @@ export function ludoLeave(code) {
     socket.emit('ludo_leave', { code }, (response) => {
       resolve(response || { error: 'Failed to leave Ludo' });
     });
-    setTimeout(() => resolve({ error: 'Request timeout' }), 5000);
+    setTimeout(() => resolve({ error: 'Request timeout' }), 15000);
   });
 }
 

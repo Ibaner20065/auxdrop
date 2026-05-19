@@ -63,6 +63,31 @@ export function setApiKey(key) {
   API_KEY = key;
 }
 
+export async function getVideoDetails(videoId) {
+  if (!API_KEY) throw new Error('YouTube API Key is missing.');
+  
+  const params = new URLSearchParams({
+    part: 'snippet',
+    id: videoId,
+    key: API_KEY,
+  });
+
+  const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  if (!data.items || data.items.length === 0) return null;
+
+  const item = data.items[0];
+  return {
+    videoId: item.id,
+    title: item.snippet.title,
+    artist: item.snippet.channelTitle,
+    thumbnail: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || '',
+    duration: 0,
+  };
+}
+
 export function clearCache() {
   cache.clear();
 }
