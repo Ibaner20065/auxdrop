@@ -41,7 +41,8 @@ import {
 } from './managers/ludo-manager.js';
 
 const PORT = process.env.PORT || 3001;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const rawOrigins = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const CLIENT_ORIGIN = rawOrigins.split(',').map(o => o.trim().replace(/\/+$/, ''));
 
 const app = express();
 app.use(cors({ origin: CLIENT_ORIGIN }));
