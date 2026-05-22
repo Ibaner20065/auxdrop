@@ -1,6 +1,6 @@
 import App from '../main.js';
-import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect, joinSession, sendChatMessage, ludoJoin } from '../services/socket.js';
-import { initPlayer, loadSong } from '../services/player.js';
+import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect, joinSession, sendChatMessage, ludoJoin, hostPositionTick } from '../services/socket.js';
+import { initPlayer, loadSong, getPlayer, getCurrentVideoId } from '../services/player.js';
 import { showNotification } from '../components/notifications.js';
 import { renderNowPlaying } from '../components/now-playing.js';
 import { renderQueueCarousel, updateQueueCarousel } from '../components/queue-carousel.js';
@@ -14,6 +14,29 @@ import { renderLudoBoard, updateLudoBoard } from '../components/ludo-board.js';
 
 const SESSION_SELECTOR = '#view-session';
 let eventHandlers = [];
+let lastHostTickAt = 0;
+let progressHandler = null;
+const HOST_TICK_INTERVAL_MS = 5000;
+const DRIFT_THRESHOLD_S = 2.0;
+
+function computeElapsedSeconds(startedAt) {
+  if (!startedAt) return 0;
+  return Math.max(0, (Date.now() - startedAt) / 1000);
+}
+
+function loadSongWithSync(song, playStartedAt, currentPosition) {
+  if (!song) return;
+  let startSeconds = 0;
+  // Prefer the most recent currentPosition if it's for this song; otherwise fall back to playStartedAt elapsed.
+  if (currentPosition && currentPosition.videoId === song.videoId && currentPosition.updatedAt) {
+    const elapsedSincePos = (Date.now() - currentPosition.updatedAt) / 1000;
+    startSeconds = Math.max(0, (currentPosition.position || 0) + elapsedSincePos);
+  } else if (playStartedAt) {
+    startSeconds = computeElapsedSeconds(playStartedAt);
+  }
+  console.log(`[sync] loading ${song.videoId} at ${startSeconds.toFixed(1)}s`);
+  loadSong(song.videoId, startSeconds);
+}
 
 export async function render() {
   const container = document.querySelector(SESSION_SELECTOR);
@@ -107,13 +130,19 @@ export async function render() {
         state.playerReady = true;
         console.log('YouTube player ready');
         if (state.nowPlaying) {
-          loadSong(state.nowPlaying.videoId);
+          loadSongWithSync(state.nowPlaying, state.playStartedAt, state.currentPosition);
         }
       },
       // Only the host notifies the server when a song ends
       state.isHost ? handleSongEnd : null
     );
+  } else if (state.nowPlaying) {
+    // Player already initialized (e.g. after rejoin) — load with sync
+    loadSongWithSync(state.nowPlaying, state.playStartedAt, state.currentPosition);
   }
+
+  // Wire host playback-position broadcast (host only, throttled)
+  setupHostPositionTick();
 
   // Request full queue state from server
   getQueue(state.code);
@@ -256,18 +285,53 @@ function setupSocketListeners() {
     now_playing: (data) => {
       console.log('Now playing event received:', data.song ? data.song.title : 'nothing', 'playerReady:', App.state.playerReady);
       App.state.nowPlaying = data.song;
+      App.state.playStartedAt = data.playStartedAt || (data.song ? Date.now() : null);
+      App.state.currentPosition = null; // reset on song change
 
       updateAlbumBackground(data.song);
       renderNowPlaying(data.song, App.state);
 
       if (data.song) {
         if (App.state.playerReady) {
-          loadSong(data.song.videoId);
+          loadSongWithSync(data.song, App.state.playStartedAt, null);
         } else {
           console.log('Player not ready yet, song will play when ready');
         }
       }
       renderPlayerControls(App.state);
+    },
+
+    position_sync: (data) => {
+      // Guests adjust to host playback if drift > threshold
+      if (App.state.isHost) return;
+      const player = getPlayer();
+      if (!player || !player.getCurrentTime) return;
+      const currentVid = getCurrentVideoId();
+      if (currentVid !== data.videoId) return;
+
+      const elapsedSinceTick = (Date.now() - data.serverTime) / 1000;
+      const expected = (data.position || 0) + elapsedSinceTick;
+      const actual = player.getCurrentTime();
+      const drift = Math.abs(expected - actual);
+      if (drift > DRIFT_THRESHOLD_S) {
+        console.log(`[sync] drift ${drift.toFixed(2)}s — seeking to ${expected.toFixed(2)}s`);
+        player.seekTo(expected, true);
+      }
+      App.state.currentPosition = {
+        videoId: data.videoId,
+        position: data.position,
+        updatedAt: data.serverTime,
+      };
+    },
+
+    user_disconnected: (data) => {
+      App.state.users = data.users || App.state.users;
+      updateUserBubbles(App.state.users, App.state);
+    },
+
+    user_reconnected: (data) => {
+      App.state.users = data.users || App.state.users;
+      updateUserBubbles(App.state.users, App.state);
     },
 
     song_skipped: (data) => {
@@ -319,6 +383,31 @@ function cleanupListeners() {
     off(event, handler);
   }
   eventHandlers = [];
+  if (progressHandler) {
+    document.removeEventListener('player-progress', progressHandler);
+    progressHandler = null;
+  }
+  lastHostTickAt = 0;
+}
+
+function setupHostPositionTick() {
+  if (progressHandler) {
+    document.removeEventListener('player-progress', progressHandler);
+    progressHandler = null;
+  }
+  if (!App.state.isHost) return;
+
+  progressHandler = (e) => {
+    if (!App.state.isHost) return;
+    const { current } = e.detail || {};
+    const song = App.state.nowPlaying;
+    if (!song || current == null) return;
+    const now = Date.now();
+    if (now - lastHostTickAt < HOST_TICK_INTERVAL_MS) return;
+    lastHostTickAt = now;
+    hostPositionTick(App.state.code, song.videoId, current);
+  };
+  document.addEventListener('player-progress', progressHandler);
 }
 
 export { render as renderSession };

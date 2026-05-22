@@ -1,5 +1,5 @@
 import App from '../main.js';
-import { connect, createSession, joinSession } from '../services/socket.js';
+import { createSession, joinSession, storeSession } from '../services/socket.js';
 import { showNotification } from '../components/notifications.js';
 
 const LANDING_SELECTOR = '#view-landing';
@@ -10,56 +10,58 @@ export function render() {
 
   container.innerHTML = `
     <div class="landing-bg" id="landing-bg"></div>
-    <div class="landing-content animate-fadeInUp" style="max-width: 1000px; width: 95%;">
-      <h1 class="landing-logo">AuxDrop Parties</h1>
+    <div class="landing-content animate-fadeInUp">
+      <h1 class="landing-logo">AuxDrop</h1>
       <p class="landing-tagline">
-        One Party Code. Multiple Experiences.<br>
-        Listen to music, play Ludo, or climb Snakes & Ladders together!
+        The Democratic Aux Cord.<br>
+        Everyone votes. No bad vibes.
       </p>
-      
-      <div class="landing-name-input" style="max-width: 300px; margin: 0 auto 2rem auto;">
-        <label for="landing-name">Your Name</label>
-        <input type="text" id="landing-name" class="input" placeholder="Enter your name" maxlength="20" value="${App.state.userName || ''}">
-      </div>
-
-      <div class="landing-cards-container" style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem;">
-        
-        <!-- Left: Snakes & Ladders -->
-        <div class="landing-card" style="flex: 1; min-width: 250px; background: var(--bg-primary); border: var(--border-outset); border-color: var(--color-outset); padding: 1rem; text-align: center;">
-          <h2 style="margin-top: 0;">🐍 S&L</h2>
-          <p style="font-size: 0.9rem; margin-bottom: 1rem;">Classic Snakes & Ladders board game party.</p>
-          <button class="landing-btn landing-btn-primary btn-start-party" data-tab="snakes" style="width: 100%; font-size: 0.9rem;">Start S&L Party</button>
+      <div class="landing-actions">
+        <div class="landing-name-input" style="text-align: left;">
+          <label for="landing-name" style="display:block; margin-bottom: 4px;">Your name</label>
+          <input type="text" id="landing-name" class="input" placeholder="Enter your name" maxlength="20" value="${App.state.userName || ''}">
         </div>
-
-        <!-- Middle: Music (AuxDrop) -->
-        <div class="landing-card" style="flex: 1; min-width: 250px; background: var(--bg-primary); border: var(--border-outset); border-color: var(--color-outset); padding: 1rem; text-align: center; transform: scale(1.05); z-index: 2; box-shadow: 4px 4px 0 #000;">
-          <h2 style="margin-top: 0;">🎵 Music</h2>
-          <p style="font-size: 0.9rem; margin-bottom: 1rem;">The Democratic Aux Cord. Vote on songs!</p>
-          <button class="landing-btn landing-btn-primary btn-start-party" data-tab="music" style="width: 100%; font-size: 0.9rem;">Start Music Party</button>
+        <div class="landing-name-input" style="margin-top: 8px; margin-bottom: 16px; text-align: left;">
+          <label for="landing-type" style="display:block; margin-bottom: 4px;">Party Type</label>
+          <select id="landing-type" class="input" style="margin-bottom: 0;">
+            <option value="music">Music</option>
+            <option value="snakes">Snakes & Ladders</option>
+            <option value="ludo">Ludo</option>
+          </select>
         </div>
-
-        <!-- Right: Ludo -->
-        <div class="landing-card" style="flex: 1; min-width: 250px; background: var(--bg-primary); border: var(--border-outset); border-color: var(--color-outset); padding: 1rem; text-align: center;">
-          <h2 style="margin-top: 0;">🎲 Ludo</h2>
-          <p style="font-size: 0.9rem; margin-bottom: 1rem;">Roll the dice and race your tokens home.</p>
-          <button class="landing-btn landing-btn-primary btn-start-party" data-tab="ludo" style="width: 100%; font-size: 0.9rem;">Start Ludo Party</button>
-        </div>
-
-      </div>
-
-      <div class="landing-divider">or</div>
-      <div class="landing-join-section" style="max-width: 400px; margin: 0 auto;">
-        <input type="text" id="landing-code" class="input input-mono" placeholder="PARTY CODE (e.g. A1B2)" maxlength="4" autocomplete="off">
-        <button class="landing-btn btn-secondary" id="btn-join-session">
-          Join Party
+        <button class="landing-btn landing-btn-primary" id="btn-create-session" style="width: 100%;">
+          Start a Session
         </button>
+        <div class="landing-divider">or</div>
+        <div class="landing-join-section">
+          <input type="text" id="landing-code" class="input input-mono" placeholder="XXXX" maxlength="4" autocomplete="off">
+          <button class="landing-btn btn-secondary" id="btn-join-session" style="width: 100%;">
+            Join Session
+          </button>
+        </div>
       </div>
     </div>
   `;
 
+  createParticles();
   attachEvents();
 }
 
+function createParticles() {
+  const bg = document.getElementById('landing-bg');
+  if (!bg) return;
+  for (let i = 0; i < 20; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'landing-particle';
+    particle.style.left = `${Math.random() * 100}%`;
+    particle.style.top = `${Math.random() * 100}%`;
+    particle.style.animationDelay = `${Math.random() * 6}s`;
+    particle.style.animationDuration = `${4 + Math.random() * 4}s`;
+    particle.style.width = `${2 + Math.random() * 3}px`;
+    particle.style.height = particle.style.width;
+    bg.appendChild(particle);
+  }
+}
 
 function attachEvents() {
   const codeInput = document.getElementById('landing-code');
@@ -77,12 +79,9 @@ function attachEvents() {
     codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
   });
 
-  const startButtons = document.querySelectorAll('.btn-start-party');
-  startButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const tab = e.target.getAttribute('data-tab');
-      handleCreate(tab, e.target);
-    });
+  document.getElementById('btn-create-session').addEventListener('click', (e) => {
+    const type = document.getElementById('landing-type').value;
+    handleCreate(type, e.target);
   });
 
   document.getElementById('btn-join-session').addEventListener('click', handleJoin);
@@ -96,16 +95,16 @@ async function handleCreate(initialTab, buttonElement) {
   buttonElement.textContent = 'Creating...';
   buttonElement.disabled = true;
 
-  connect();
-
   const result = await createSession(userName, initialTab);
 
-  if (result.error) {
-    showNotification('error', result.error);
+  if (result.error || !result.success) {
+    showNotification('error', result.error || 'Failed to create session');
     buttonElement.textContent = originalText;
     buttonElement.disabled = false;
     return;
   }
+
+  storeSession(result.code, result.hostId);
 
   App.navigateToSession({
     code: result.code,
@@ -114,6 +113,8 @@ async function handleCreate(initialTab, buttonElement) {
     isHost: true,
     userName,
     users: result.users || [{ id: result.hostId, name: userName, isHost: true }],
+    nowPlaying: result.nowPlaying || null,
+    playStartedAt: result.playStartedAt || null,
     initialTab: initialTab
   });
 }
@@ -132,16 +133,16 @@ async function handleJoin() {
   btn.textContent = 'Joining...';
   btn.disabled = true;
 
-  connect();
-
   const result = await joinSession(code, userName);
 
-  if (result.error) {
-    showNotification('error', result.error);
+  if (result.error || !result.success) {
+    showNotification('error', result.error || 'Failed to join session');
     btn.textContent = 'Join Session';
     btn.disabled = false;
     return;
   }
+
+  storeSession(result.code, result.userId);
 
   App.navigateToSession({
     code: result.code,
@@ -151,6 +152,9 @@ async function handleJoin() {
     userName,
     users: result.users || [],
     nowPlaying: result.nowPlaying || null,
+    playStartedAt: result.playStartedAt || null,
+    currentPosition: result.currentPosition || null,
+    queue: result.queue || null,
     initialTab: result.partyType,
   });
 }

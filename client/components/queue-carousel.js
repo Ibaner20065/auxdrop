@@ -4,7 +4,25 @@ export function renderQueueCarousel(queue, state) {
   const container = document.getElementById('queue-carousel-container');
   if (!container) return;
 
-  if (!queue || queue.length === 0) {
+  if (queue == null) {
+    // Not fetched yet — show shimmer skeletons
+    container.innerHTML = `
+      <div class="queue-carousel queue-loading">
+        ${Array(3).fill(0).map(() => `
+          <div class="queue-skeleton-card">
+            <div class="queue-skeleton-art"></div>
+            <div class="queue-skeleton-lines">
+              <div class="queue-skeleton-line wide"></div>
+              <div class="queue-skeleton-line narrow"></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    return;
+  }
+
+  if (queue.length === 0) {
     container.innerHTML = `
       <div class="queue-empty">
         <div class="queue-empty-icon">🎵</div>

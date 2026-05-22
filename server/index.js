@@ -6,7 +6,9 @@ import cors from 'cors';
 import {
   createSession,
   joinSession,
+  rejoinSession,
   leaveSession,
+  markSocketDisconnected,
   registerSocket,
   getSession,
   getSessionPublic,
@@ -15,6 +17,7 @@ import {
   getCleanupCandidates,
   destroySession,
   setNowPlaying,
+  setCurrentPosition,
 } from './managers/session-manager.js';
 import {
   addSong,
@@ -66,7 +69,7 @@ io.on('connection', (socket) => {
       const { code, hostId, session } = createSession(userName || 'Host', partyType);
       registerSocket(socket.id, code, hostId);
       socket.join(code);
-      
+
       const publicSession = getSessionPublic(code);
       socket.emit('session_created', {
         code,
@@ -74,7 +77,17 @@ io.on('connection', (socket) => {
         ...publicSession,
       });
       console.log(`Session created: ${code} by ${userName || 'Host'}`);
-      callback?.({ success: true, code, hostId });
+      callback?.({
+        success: true,
+        code,
+        hostId,
+        isHost: true,
+        partyType: publicSession.partyType,
+        users: publicSession.users || [],
+        nowPlaying: publicSession.nowPlaying || null,
+        playStartedAt: publicSession.playStartedAt || null,
+        currentPosition: publicSession.currentPosition || null,
+      });
     } catch (err) {
       console.error('Create session error:', err);
       socket.emit('error', { message: 'Failed to create session' });
@@ -122,6 +135,8 @@ io.on('connection', (socket) => {
         partyType: publicSession.partyType,
         users: publicSession.users || [],
         nowPlaying: publicSession.nowPlaying || null,
+        playStartedAt: publicSession.playStartedAt || null,
+        currentPosition: publicSession.currentPosition || null,
         queue: queue || [],
       });
 
@@ -130,6 +145,88 @@ io.on('connection', (socket) => {
       console.error('Join session error:', err);
       socket.emit('error', { message: 'Failed to join session' });
       callback?.({ success: false, error: 'Failed to join session' });
+    }
+  });
+
+  // ─── Rejoin Session (after reconnect / tab refresh) ────────────
+  socket.on('rejoin_session', ({ code, userId }, callback) => {
+    try {
+      const normalizedCode = (code || '').toUpperCase();
+      const result = rejoinSession(normalizedCode, userId);
+      if (result.error) {
+        callback?.({ success: false, error: result.error });
+        return;
+      }
+
+      registerSocket(socket.id, normalizedCode, userId);
+      socket.join(normalizedCode);
+
+      const publicSession = getSessionPublic(normalizedCode);
+      const queue = getPublicSortedQueue(normalizedCode);
+      const ludoState = ludoGetPublicState(normalizedCode);
+
+      io.to(normalizedCode).emit('user_reconnected', {
+        userId,
+        users: publicSession?.users || [],
+      });
+
+      callback?.({
+        success: true,
+        userId,
+        code: normalizedCode,
+        hostId: publicSession.hostId,
+        isHost: publicSession.hostId === userId,
+        partyType: publicSession.partyType,
+        users: publicSession.users || [],
+        nowPlaying: publicSession.nowPlaying || null,
+        playStartedAt: publicSession.playStartedAt || null,
+        currentPosition: publicSession.currentPosition || null,
+        queue: queue || [],
+        ludoState: ludoState || null,
+      });
+
+      console.log(`User ${userId} rejoined session ${normalizedCode}`);
+    } catch (err) {
+      console.error('Rejoin session error:', err);
+      callback?.({ success: false, error: 'Failed to rejoin session' });
+    }
+  });
+
+  // ─── Explicit Leave (clicks Leave button) ──────────────────────
+  socket.on('leave_session', (_payload, callback) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (mapping) {
+        ludoLeaveGame(mapping.code, mapping.user.id);
+      }
+      const result = leaveSession(socket.id);
+      if (result) {
+        const { code, session, user, ended, newHostId } = result;
+        if (ended) {
+          const stats = generateStats(session, null, session.createdAt, Date.now());
+          clearQueue(code);
+          destroySession(code);
+          io.to(code).emit('session_ended', { stats, reason: 'host_left' });
+          console.log(`Session ${code} ended (host left)`);
+        } else {
+          socket.leave(code);
+          const publicSession = getSessionPublic(code);
+          io.to(code).emit('user_left', {
+            userId: user?.id,
+            users: publicSession?.users || [],
+            newHostId,
+          });
+          if (session.users.size === 0) {
+            clearQueue(code);
+            destroySession(code);
+            console.log(`Session ${code} destroyed (empty)`);
+          }
+        }
+      }
+      callback?.({ success: true });
+    } catch (err) {
+      console.error('Leave session error:', err);
+      callback?.({ success: false, error: 'Failed to leave session' });
     }
   });
 
@@ -177,21 +274,23 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     try {
       const mapping = getUserBySocket(socket.id);
-      if (mapping) {
-        ludoLeaveGame(mapping.code, mapping.user.id);
-      }
+      const pendingCode = mapping?.code;
+      const pendingUserId = mapping?.user?.id;
 
-      const result = leaveSession(socket.id);
-      if (result) {
+      const pending = markSocketDisconnected(socket.id, (result) => {
+        // Grace period expired without a rejoin — fully remove the user
         const { code, session, user, ended, newHostId } = result;
+        if (pendingUserId) {
+          try { ludoLeaveGame(code, pendingUserId); } catch {}
+        }
+
         if (ended) {
           const stats = generateStats(session, null, session.createdAt, Date.now());
           clearQueue(code);
           destroySession(code);
           io.to(code).emit('session_ended', { stats, reason: 'host_left' });
-          console.log(`Session ${code} ended (host left)`);
+          console.log(`Session ${code} ended (host disconnect past grace)`);
         } else {
-          socket.leave(code);
           const publicSession = getSessionPublic(code);
           io.to(code).emit('user_left', {
             userId: user?.id,
@@ -204,6 +303,16 @@ io.on('connection', (socket) => {
             console.log(`Session ${code} destroyed (empty)`);
           }
         }
+      });
+
+      if (pending && pendingCode) {
+        const publicSession = getSessionPublic(pendingCode);
+        io.to(pendingCode).emit('user_disconnected', {
+          userId: pending.userId,
+          users: publicSession?.users || [],
+          gracePeriodMs: pending.gracePeriodMs,
+        });
+        console.log(`User ${pending.userId} disconnected (grace ${pending.gracePeriodMs}ms)`);
       }
     } catch (err) {
       console.error('Disconnect error:', err);
@@ -399,6 +508,27 @@ io.on('connection', (socket) => {
       console.error('Get queue error:', err);
       socket.emit('error', { message: 'Failed to get queue' });
       callback?.({ success: false, error: 'Failed to get queue' });
+    }
+  });
+
+  // ─── Host playback position broadcast ─────────────────────────
+  socket.on('host_position_tick', ({ code, videoId, position }) => {
+    try {
+      const mapping = getUserBySocket(socket.id);
+      if (!mapping || mapping.code !== code) return;
+      if (!isHost(code, mapping.user.id)) return;
+
+      const session = getSession(code);
+      if (!session?.nowPlaying || session.nowPlaying.videoId !== videoId) return;
+
+      setCurrentPosition(code, videoId, position);
+      socket.to(code).emit('position_sync', {
+        videoId,
+        position: Number(position) || 0,
+        serverTime: Date.now(),
+      });
+    } catch (err) {
+      console.error('host_position_tick error:', err);
     }
   });
 

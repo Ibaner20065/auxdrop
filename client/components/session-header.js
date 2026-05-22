@@ -1,4 +1,4 @@
-import { disconnect } from '../services/socket.js';
+import { disconnect, getSocket } from '../services/socket.js';
 import App from '../main.js';
 
 export function renderSessionHeader(state) {
@@ -51,8 +51,23 @@ function attachHeaderEvents(state) {
   });
 
   document.getElementById('btn-leave')?.addEventListener('click', () => {
-    disconnect();
-    App.leaveSession();
+    const sock = getSocket();
+    if (sock?.connected) {
+      sock.emit('leave_session', {}, () => {
+        disconnect();
+        App.leaveSession();
+      });
+      // Failsafe in case the ack never arrives
+      setTimeout(() => {
+        if (App.currentView === 'session') {
+          disconnect();
+          App.leaveSession();
+        }
+      }, 1500);
+    } else {
+      disconnect();
+      App.leaveSession();
+    }
   });
 }
 

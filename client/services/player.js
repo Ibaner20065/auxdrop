@@ -109,10 +109,19 @@ function stopProgressTracking() {
   }
 }
 
-export function loadSong(videoId) {
+export function loadSong(videoId, startSeconds = 0) {
   if (!player) return;
   currentVideoId = videoId;
-  player.loadVideoById(videoId);
+  const start = Math.max(0, Number(startSeconds) || 0);
+  if (start > 0) {
+    player.loadVideoById({ videoId, startSeconds: start });
+  } else {
+    player.loadVideoById(videoId);
+  }
+}
+
+export function getCurrentVideoId() {
+  return currentVideoId;
 }
 
 export function play() {

@@ -4,10 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AuxDrop — The Democratic Aux Cord</title>
-  <meta name="description" content="Real-time shared music queue where everyone votes on what plays next.">
-  <meta property="og:title" content="AuxDrop">
-  <meta property="og:description" content="The Democratic Aux Cord — real-time shared music queue with voting">
+  
+  <!-- SEO & Metadata -->
+  <meta name="description" content="Real-time shared music queue where everyone votes on what plays next. Create a party, share the link, and let the crowd decide the playlist.">
+  <meta name="keywords" content="music, queue, shared playlist, vote music, aux cord, party music, democratic playlist, realtime music">
+  <meta name="author" content="AuxDrop">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#121212">
+  
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://auxdrop.com/">
+  <meta property="og:title" content="AuxDrop — The Democratic Aux Cord">
+  <meta property="og:description" content="Real-time shared music queue where everyone votes on what plays next. Create a party, share the link, and let the crowd decide the playlist.">
+  <meta property="og:image" content="https://auxdrop.com/og-image.jpg">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://auxdrop.com/">
+  <meta property="twitter:title" content="AuxDrop — The Democratic Aux Cord">
+  <meta property="twitter:description" content="Real-time shared music queue where everyone votes on what plays next. Create a party, share the link, and let the crowd decide the playlist.">
+  <meta property="twitter:image" content="https://auxdrop.com/og-image.jpg">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://auxdrop.com/">
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <!-- 90s System Fonts - no external fonts needed -->
   <link rel="stylesheet" href="index.css">
   <link rel="stylesheet" href="ludo-styles.css">
@@ -16,6 +38,7 @@
   <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark Mode">
     🌙
   </button>
+  <div id="global-connection-status" class="connection-status idle" aria-live="polite">Idle</div>
   <div id="app">
     <div id="view-landing" class="view active"></div>
     <div id="view-session" class="view"></div>

@@ -1,5 +1,6 @@
 import { render as renderLanding } from './views/landing.js';
 import { render as renderSession } from './views/session.js';
+import { setRejoinHandler, clearStoredSession } from './services/socket.js';
 
 const App = {
   currentView: 'landing',
@@ -10,18 +11,39 @@ const App = {
     isHost: false,
     userName: null,
     users: [],
-    queue: [],
+    queue: null,
     nowPlaying: null,
+    playStartedAt: null,
+    currentPosition: null,
     playerReady: false,
   },
 
   init() {
     this.showView('landing');
     window.__auxdrop = this;
-    
+
+    setRejoinHandler((payload) => this.handleAutoRejoin(payload));
+
     // Mobile Detection
     this.checkMobile();
     window.addEventListener('resize', () => this.checkMobile());
+  },
+
+  handleAutoRejoin(payload) {
+    if (!payload || !payload.success) return;
+    console.log('[App] Auto-rejoin received, restoring session', payload.code);
+    this.state.code = payload.code;
+    this.state.userId = payload.userId;
+    this.state.hostId = payload.hostId;
+    this.state.isHost = !!payload.isHost;
+    this.state.users = payload.users || [];
+    this.state.queue = payload.queue || [];
+    this.state.nowPlaying = payload.nowPlaying || null;
+    this.state.playStartedAt = payload.playStartedAt || null;
+    this.state.currentPosition = payload.currentPosition || null;
+    this.state.initialTab = payload.partyType;
+    this.state.userName = this.state.userName || (payload.users || []).find(u => u.id === payload.userId)?.name || 'Guest';
+    this.showView('session');
   },
 
   checkMobile() {
@@ -41,7 +63,7 @@ const App = {
     const view = document.getElementById(`view-${viewName}`);
     if (view) view.classList.add('active');
     this.currentView = viewName;
-    
+
     if (viewName === 'landing') {
       renderLanding();
     } else if (viewName === 'session') {
@@ -55,6 +77,7 @@ const App = {
   },
 
   leaveSession() {
+    clearStoredSession();
     this.state = {
       code: null,
       userId: null,
@@ -62,8 +85,10 @@ const App = {
       isHost: false,
       userName: null,
       users: [],
-      queue: [],
+      queue: null,
       nowPlaying: null,
+      playStartedAt: null,
+      currentPosition: null,
       playerReady: false,
     };
     this.showView('landing');
