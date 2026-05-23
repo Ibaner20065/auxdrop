@@ -75,7 +75,7 @@ function openQRModal(code) {
   const modal = document.getElementById('qr-modal');
   overlay.classList.remove('hidden');
 
-  const sessionUrl = \`\${window.location.origin}?join=\${code}\`;
+  const sessionUrl = `${window.location.origin}?join=${code}`;
 
   modal.innerHTML = `
     <div class="modal-header">

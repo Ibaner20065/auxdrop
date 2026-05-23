@@ -5,7 +5,7 @@ export function renderSongCard(song, state, index) {
   const card = document.createElement('div');
   card.className = 'song-card animate-fadeInUp';
   if (song.score >= 3) card.classList.add('hot');
-  card.style.animationDelay = \`\${index * 50}ms\`;
+  card.style.animationDelay = `${index * 50}ms`;
   card.dataset.songId = song.id;
 
   const addedByUser = state.users.find(u => u.id === song.addedBy);

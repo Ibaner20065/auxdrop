@@ -63,6 +63,6 @@ export function renderNowPlaying(song, state) {
 export function updateProgress(percent) {
   const bar = document.getElementById('player-progress-fill');
   if (bar) {
-    bar.style.width = \`\${Math.min(100, Math.max(0, percent))}%\`;
+    bar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
   }
 }

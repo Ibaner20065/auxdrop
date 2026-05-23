@@ -89,7 +89,7 @@ function attachPlayerEvents() {
 
     const progressBar = document.getElementById('player-progress-fill');
     if (progressBar && duration > 0) {
-      progressBar.style.width = \`\${(current / duration) * 100}%\`;
+      progressBar.style.width = `${(current / duration) * 100}%`;
     }
   });
 
@@ -110,5 +110,5 @@ function formatTime(seconds) {
   if (!seconds || isNaN(seconds)) return '0:00';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return \`\${m}:\${s.toString().padStart(2, '0')}\`;
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
