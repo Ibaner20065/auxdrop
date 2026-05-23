@@ -12,34 +12,26 @@ export function renderPlayerControls(state) {
   }
 
   container.innerHTML = `
-    <div class="player-controls">
-      <div class="player-actions">
-        ${state.isHost ? `
-          <button class="btn" id="btn-rewind" title="Rewind 10s">⏪</button>
-        ` : ''}
-        <button class="btn" id="btn-play-pause">▶</button>
-        ${state.isHost ? `
-          <button class="btn" id="btn-fastforward" title="Fast Forward 10s">⏩</button>
-        ` : ''}
+    <div class="bottom-player">
+      <div style="display:flex; gap: 8px;">
+        <button class="btn" id="btn-rewind" style="padding: 8px; border-width: 2px;">⏪</button>
+        <button class="btn btn-primary" id="btn-play-pause" style="padding: 8px 16px; border-width: 2px;">⏸</button>
+        <button class="btn" id="btn-fastforward" style="padding: 8px; border-width: 2px;">⏩</button>
       </div>
-      <div class="player-track-info">
-        <div style="display:flex; flex-direction:column;">
-          <span class="player-title">${state.nowPlaying.title}</span>
-          <span class="player-artist">${state.nowPlaying.artist}</span>
-        </div>
+      
+      <div style="flex:1; display:flex; flex-direction:column; gap:4px; max-width: 500px; margin: 0 auto;">
+         <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">
+            <span id="player-current-time">0:00</span>
+            <span id="player-duration">0:00</span>
+         </div>
+         <div class="player-progress-bar" id="player-progress-click-area">
+            <div class="player-progress-fill" id="player-progress-fill"></div>
+         </div>
       </div>
-      <div class="player-progress-container" style="display:flex; align-items:center; gap:8px;">
-        <span id="player-current-time" style="width:40px; text-align:right;">0:00</span>
-        <div class="player-progress-bar" id="player-progress-click-area" style="cursor:pointer; flex:1;">
-          <div class="player-progress-fill" id="player-progress-fill" style="width:0%;"></div>
-        </div>
-        <span id="player-duration" style="width:40px;">0:00</span>
-      </div>
-      <div class="player-actions">
-        <button class="btn" id="btn-volume" title="Volume">🔊</button>
-        ${state.isHost ? `
-          <button class="btn" id="btn-skip" title="Skip" style="color:var(--accent-red)">⏭</button>
-        ` : ''}
+      
+      <div style="display:flex; gap: 8px;">
+        <button class="btn" id="btn-volume" style="padding: 8px; border-width: 2px;">🔊</button>
+        <button class="btn" id="btn-skip" style="padding: 8px; border-width: 2px; border-color:var(--neon-pink); color:var(--neon-pink);">⏭ VETO</button>
       </div>
     </div>
   `;
@@ -97,7 +89,7 @@ function attachPlayerEvents() {
 
     const progressBar = document.getElementById('player-progress-fill');
     if (progressBar && duration > 0) {
-      progressBar.style.width = `${(current / duration) * 100}%`;
+      progressBar.style.width = \`\${(current / duration) * 100}%\`;
     }
   });
 
@@ -118,5 +110,5 @@ function formatTime(seconds) {
   if (!seconds || isNaN(seconds)) return '0:00';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return \`\${m}:\${s.toString().padStart(2, '0')}\`;
 }

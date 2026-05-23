@@ -12,22 +12,21 @@ export function openSearchModal(onAdd) {
 
   modal.innerHTML = `
     <div class="modal-header">
-      <h2 class="modal-title">Search YouTube</h2>
-      <button class="modal-close" id="search-modal-close">✕</button>
+      <h2 class="display">SEARCH DATABASE</h2>
+      <button class="btn" id="search-modal-close" style="padding: 4px 8px; border-width: 2px;">✕</button>
     </div>
-    <div class="modal-body">
-      <div style="display:flex; gap:8px;">
+    <div style="padding: 24px;">
+      <div style="display:flex; gap:8px; margin-bottom: 16px;">
         <input
           type="text"
           class="input"
           id="search-input"
-          placeholder="Search by name, artist, or paste YouTube link..."
-          style="margin:0;"
+          placeholder="SEARCH BY NAME OR URL..."
           autofocus
         >
       </div>
-      <div class="search-results" id="search-results">
-        <div style="padding:16px; text-align:center;">Type at least 2 characters to search...</div>
+      <div class="search-results" id="search-results" style="max-height: 400px; overflow-y: auto; border: var(--brutal-border); background: rgba(0,0,0,0.5);">
+        <div class="mono" style="padding:24px; text-align:center; color: var(--text-muted);">AWAITING INPUT...</div>
       </div>
     </div>
   `;
@@ -46,7 +45,7 @@ export function openSearchModal(onAdd) {
     clearTimeout(searchTimeout);
     const query = e.target.value.trim();
     if (query.length < 2) {
-      document.getElementById('search-results').innerHTML = '<div style="padding:16px; text-align:center;">Type at least 2 characters to search...</div>';
+      document.getElementById('search-results').innerHTML = '<div class="mono" style="padding:24px; text-align:center; color: var(--text-muted);">AWAITING INPUT...</div>';
       return;
     }
     searchTimeout = setTimeout(() => performSearch(query), 300);
@@ -69,7 +68,7 @@ function handleSearchKeydown(e) {
 
 async function performSearch(query) {
   const resultsContainer = document.getElementById('search-results');
-  resultsContainer.innerHTML = '<div class="search-loading">Searching...</div>';
+  resultsContainer.innerHTML = '<div class="mono" style="padding:24px; text-align:center; color: var(--neon-cyan); animation: pulse 1s infinite;">SEARCHING MAINFRAME...</div>';
 
   let results = [];
   
@@ -85,7 +84,7 @@ async function performSearch(query) {
   }
 
   if (results.length === 0) {
-    resultsContainer.innerHTML = '<div style="padding:16px; text-align:center;">No results found. Try a different search.</div>';
+    resultsContainer.innerHTML = '<div class="mono" style="padding:24px; text-align:center; color: var(--neon-pink);">NO RECORDS FOUND.</div>';
     return;
   }
 

@@ -9,58 +9,48 @@ export function render() {
   container.className = 'view active landing';
 
   container.innerHTML = `
-    <div class="landing-bg" id="landing-bg"></div>
-    <div class="landing-content animate-fadeInUp">
-      <h1 class="landing-logo">AuxDrop</h1>
-      <p class="landing-tagline">
-        The Democratic Aux Cord.<br>
-        Everyone votes. No bad vibes.
-      </p>
-      <div class="landing-actions">
-        <div class="landing-name-input" style="text-align: left;">
-          <label for="landing-name" style="display:block; margin-bottom: 4px;">Your name</label>
-          <input type="text" id="landing-name" class="input" placeholder="Enter your name" maxlength="20" value="${App.state.userName || ''}">
+    <div class="landing-bg">
+      <div class="landing-grid-overlay"></div>
+    </div>
+    <div class="landing-container animate-fadeInUp">
+      <h1 class="hero-title">AUXDROP</h1>
+      <p class="hero-subtitle">THE DEMOCRATIC AUX CORD</p>
+      
+      <div class="entry-card">
+        <div style="margin-bottom: 24px;">
+          <label class="mono" style="display:block; margin-bottom: 8px; color: var(--neon-cyan);">// CALLSIGN</label>
+          <input type="text" id="landing-name" class="input" placeholder="ENTER YOUR ALIAS" maxlength="20" value="${App.state.userName || ''}">
         </div>
-        <div class="landing-name-input" style="margin-top: 8px; margin-bottom: 16px; text-align: left;">
-          <label for="landing-type" style="display:block; margin-bottom: 4px;">Party Type</label>
-          <select id="landing-type" class="input" style="margin-bottom: 0;">
-            <option value="music">Music</option>
-            <option value="snakes">Snakes & Ladders</option>
-            <option value="ludo">Ludo</option>
+        
+        <div style="margin-bottom: 32px;">
+          <label class="mono" style="display:block; margin-bottom: 8px; color: var(--neon-cyan);">// EXPERIENCE</label>
+          <select id="landing-type" class="input" style="appearance: none;">
+            <option value="music">LIVE MUSIC QUEUE</option>
+            <option value="snakes">SNAKES & LADDERS</option>
+            <option value="ludo">MULTIPLAYER LUDO</option>
           </select>
         </div>
-        <button class="landing-btn landing-btn-primary" id="btn-create-session" style="width: 100%;">
-          Start a Session
+        
+        <button class="btn btn-primary" id="btn-create-session" style="width: 100%; margin-bottom: 24px;">
+          INITIALIZE PARTY_
         </button>
-        <div class="landing-divider">or</div>
-        <div class="landing-join-section">
+        
+        <div style="text-align: center; margin-bottom: 24px; position: relative;">
+          <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.1); z-index: 1;"></div>
+          <span class="mono" style="background: var(--bg-surface); padding: 0 12px; position: relative; z-index: 2; color: var(--text-muted); font-size: 0.8rem;">OR JOIN EXISTING</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
           <input type="text" id="landing-code" class="input input-mono" placeholder="XXXX" maxlength="4" autocomplete="off">
-          <button class="landing-btn btn-secondary" id="btn-join-session" style="width: 100%;">
-            Join Session
+          <button class="btn" id="btn-join-session" style="width: 100%;">
+            ENTER ROOM
           </button>
         </div>
       </div>
     </div>
   `;
 
-  createParticles();
   attachEvents();
-}
-
-function createParticles() {
-  const bg = document.getElementById('landing-bg');
-  if (!bg) return;
-  for (let i = 0; i < 20; i++) {
-    const particle = document.createElement('div');
-    particle.className = 'landing-particle';
-    particle.style.left = `${Math.random() * 100}%`;
-    particle.style.top = `${Math.random() * 100}%`;
-    particle.style.animationDelay = `${Math.random() * 6}s`;
-    particle.style.animationDuration = `${4 + Math.random() * 4}s`;
-    particle.style.width = `${2 + Math.random() * 3}px`;
-    particle.style.height = particle.style.width;
-    bg.appendChild(particle);
-  }
 }
 
 function attachEvents() {
@@ -88,17 +78,17 @@ function attachEvents() {
 }
 
 async function handleCreate(initialTab, buttonElement) {
-  const userName = document.getElementById('landing-name').value.trim() || 'Host';
+  const userName = document.getElementById('landing-name').value.trim() || 'HOST';
   App.state.userName = userName;
 
   const originalText = buttonElement.textContent;
-  buttonElement.textContent = 'Creating...';
+  buttonElement.textContent = 'CONNECTING...';
   buttonElement.disabled = true;
 
   const result = await createSession(userName, initialTab);
 
   if (result.error || !result.success) {
-    showNotification('error', result.error || 'Failed to create session');
+    showNotification('error', result.error || 'Failed to initialize');
     buttonElement.textContent = originalText;
     buttonElement.disabled = false;
     return;
@@ -122,22 +112,22 @@ async function handleCreate(initialTab, buttonElement) {
 async function handleJoin() {
   const code = document.getElementById('landing-code').value.trim().toUpperCase();
   if (!code || code.length < 4) {
-    showNotification('error', 'Please enter a valid 4-character code');
+    showNotification('error', 'INVALID ROOM CODE');
     return;
   }
 
-  const userName = document.getElementById('landing-name').value.trim() || 'Guest';
+  const userName = document.getElementById('landing-name').value.trim() || 'GUEST';
   App.state.userName = userName;
 
   const btn = document.getElementById('btn-join-session');
-  btn.textContent = 'Joining...';
+  btn.textContent = 'CONNECTING...';
   btn.disabled = true;
 
   const result = await joinSession(code, userName);
 
   if (result.error || !result.success) {
-    showNotification('error', result.error || 'Failed to join session');
-    btn.textContent = 'Join Session';
+    showNotification('error', result.error || 'Connection Failed');
+    btn.textContent = 'ENTER ROOM';
     btn.disabled = false;
     return;
   }

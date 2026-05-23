@@ -3,52 +3,49 @@ export function renderNowPlaying(song, state) {
   if (!container) return;
 
   if (!song) {
-    if (!localStorage.getItem('themeOverride')) {
-      document.body.classList.remove('dark-mode');
-    }
-    const themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn && !localStorage.getItem('themeOverride')) {
-      themeBtn.textContent = '🌙';
-    }
     container.innerHTML = `
-      <div class="now-playing-header">Media Player</div>
-      <div class="now-playing-content" style="align-items:center; justify-content:center; flex-direction:column;">
-        <div style="font-size:3rem;">♫</div>
-        <div style="font-family:var(--font-heading); font-size:1.5rem;">Waiting for songs...</div>
+      <div class="now-playing-hero" style="justify-content: center; align-items: center; min-height: 250px;">
+        <div style="text-align: center;">
+          <div style="font-size: 4rem; color: var(--neon-pink); margin-bottom: 16px; animation: pulse 2s infinite;">♫</div>
+          <h2 class="display" style="font-size: 2rem; color: var(--text-muted);">AWAITING TRANSMISSION</h2>
+        </div>
       </div>
     `;
     return;
   }
 
-  if (!localStorage.getItem('themeOverride')) {
-    document.body.classList.add('dark-mode');
-  }
-  const themeBtn = document.getElementById('theme-toggle');
-  if (themeBtn && !localStorage.getItem('themeOverride')) {
-    themeBtn.textContent = '☀️';
-  }
-
   const isUsersSong = song.addedBy === state.userId;
   const addedByUser = state.users.find(u => u.id === song.addedBy);
-  const addedByName = addedByUser?.name || 'Unknown';
+  const addedByName = addedByUser?.name || 'UNKNOWN';
 
   container.innerHTML = `
-    <div class="now-playing-header">
-      Now Playing <span class="badge animate-pulse" style="background:#ff0000; color:#fff; border-color:#ff5555 #800000 #800000 #ff5555; margin-left:8px;">HOT!</span>
-    </div>
-    <div class="now-playing-content">
-      <img class="now-playing-art" src="${song.thumbnail}" alt="${song.title}" loading="lazy">
-      <div class="now-playing-info">
-        <h2 class="now-playing-title">${song.title}</h2>
-        <p class="now-playing-artist">${song.artist}</p>
-        <div class="now-playing-meta">
-          <span>Added by: <strong style="color:var(--accent-blue)">${addedByName}</strong></span>
-          ${isUsersSong ? '<span class="badge" style="margin-left:8px; background:var(--accent-yellow)">YOUR SONG</span>' : ''}
+    <div class="now-playing-hero animate-fadeInUp">
+      <div class="np-art-wrapper">
+        <img class="np-art" src="${song.thumbnail}" alt="${song.title}">
+        <div class="np-art-overlay"></div>
+      </div>
+      
+      <div class="np-info">
+        <div class="np-label">
+          <div class="pulse-dot"></div>
+          NOW PLAYING IN THE ARENA
         </div>
+        
+        <h2 class="np-title">${song.title}</h2>
+        <p class="np-artist">${song.artist}</p>
+        
+        <div style="margin-top: 24px; display: flex; gap: 12px; align-items: center;">
+          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; font-family: var(--font-mono); font-size: 0.85rem;">
+            BROUGHT BY <strong style="color: var(--neon-cyan);">${addedByName.toUpperCase()}</strong>
+          </div>
+          
+          ${isUsersSong ? '<div style="background: var(--neon-pink); color: #fff; padding: 8px 16px; font-family: var(--font-display); font-size: 0.85rem; box-shadow: 2px 2px 0 #000;">YOUR DROP</div>' : ''}
+        </div>
+        
         ${state.isHost ? `
-          <div style="margin-top:16px;">
-            <button class="btn btn-secondary" id="btn-skip-host" style="font-size:0.8rem; padding:4px 8px;">
-              ⏭ Skip Track
+          <div style="margin-top:24px;">
+            <button class="btn btn-primary" id="btn-skip-host" style="font-size:0.8rem; padding:8px 16px;">
+              VETO TRACK
             </button>
           </div>
         ` : ''}
@@ -64,8 +61,8 @@ export function renderNowPlaying(song, state) {
 }
 
 export function updateProgress(percent) {
-  const bar = document.getElementById('now-playing-progress-bar');
+  const bar = document.getElementById('player-progress-fill');
   if (bar) {
-    bar.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+    bar.style.width = \`\${Math.min(100, Math.max(0, percent))}%\`;
   }
 }

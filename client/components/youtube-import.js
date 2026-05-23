@@ -18,19 +18,19 @@ export function openYouTubeImportModal(onAddSong) {
 
   modal.innerHTML = `
     <div class="modal-header">
-      <h2 class="modal-title">▶️ Import YouTube Playlist</h2>
-      <button class="modal-close" id="yt-modal-close">✕</button>
+      <h2 class="display">IMPORT PLAYLIST</h2>
+      <button class="btn" id="yt-modal-close" style="padding: 4px 8px; border-width: 2px;">✕</button>
     </div>
-    <div class="modal-body" style="padding:24px;">
-      <p style="margin-bottom:12px; font-size:0.9rem;">
-        Paste a YouTube or YouTube Music playlist link below. The playlist must be public or unlisted.
+    <div style="padding:24px;">
+      <p class="mono" style="margin-bottom:16px; font-size:0.8rem; color:var(--text-muted);">
+        PASTE A PUBLIC YOUTUBE PLAYLIST URL BELOW.
       </p>
-      <input type="text" id="yt-playlist-url" class="search-input" placeholder="https://youtube.com/playlist?list=..." style="margin-bottom:16px;">
+      <input type="text" id="yt-playlist-url" class="input" placeholder="HTTPS://YOUTUBE.COM/PLAYLIST?LIST=..." style="margin-bottom:24px;">
       
-      <div id="yt-import-status" style="font-size:0.85rem; margin-bottom:16px; color:var(--accent-red); display:none; word-break: break-word;"></div>
+      <div class="mono" id="yt-import-status" style="font-size:0.85rem; margin-bottom:16px; color:var(--neon-pink); display:none; word-break: break-word;"></div>
       
-      <button class="btn btn-primary" id="btn-yt-import" style="width:100%; background:#FF0000; border-color:#FF0000; color:#FFF; font-weight:bold;">
-        Import Playlist
+      <button class="btn btn-primary" id="btn-yt-import" style="width:100%;">
+        INITIATE IMPORT_
       </button>
     </div>
   `;
@@ -61,8 +61,7 @@ export function openYouTubeImportModal(onAddSong) {
     }
 
     statusEl.style.display = 'block';
-    statusEl.style.color = '#fff';
-    statusEl.textContent = 'Fetching playlist...';
+    statusEl.textContent = 'FETCHING DATA...';
     btnEl.disabled = true;
 
     try {

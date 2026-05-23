@@ -1,5 +1,5 @@
 import App from '../main.js';
-import { on, off, addSong, voteSong, skipCurrent, songEnded, getQueue, disconnect, joinSession, sendChatMessage, ludoJoin, hostPositionTick } from '../services/socket.js';
+import { on, off, addSong, getQueue, disconnect, joinSession, sendChatMessage, ludoJoin, hostPositionTick, skipCurrent, songEnded } from '../services/socket.js';
 import { initPlayer, loadSong, getPlayer, getCurrentVideoId } from '../services/player.js';
 import { showNotification } from '../components/notifications.js';
 import { renderNowPlaying } from '../components/now-playing.js';
@@ -27,7 +27,6 @@ function computeElapsedSeconds(startedAt) {
 function loadSongWithSync(song, playStartedAt, currentPosition) {
   if (!song) return;
   let startSeconds = 0;
-  // Prefer the most recent currentPosition if it's for this song; otherwise fall back to playStartedAt elapsed.
   if (currentPosition && currentPosition.videoId === song.videoId && currentPosition.updatedAt) {
     const elapsedSincePos = (Date.now() - currentPosition.updatedAt) / 1000;
     startSeconds = Math.max(0, (currentPosition.position || 0) + elapsedSincePos);
@@ -44,70 +43,58 @@ export async function render() {
 
   container.className = 'view active session';
   container.innerHTML = `
-    <div id="album-gradient-bg"></div>
+    <!-- Ambient Energy Visualizer -->
+    <div id="energy-visualizer"></div>
+    
     <div id="session-header-container"></div>
     <div id="youtube-player" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;"></div>
-    <main class="session-main">
-      <div id="session-tabs-nav" style="display:flex; gap:10px; margin-bottom:1rem; padding: 0.5rem; background: var(--bg-primary); border-bottom: var(--border-outset);">
-        <button class="btn btn-secondary tab-btn active" data-target="tab-music">🎵 Music Queue</button>
-        <button class="btn btn-secondary tab-btn" data-target="tab-snakes">🐍 Snakes & Ladders</button>
-        <button class="btn btn-secondary tab-btn" data-target="tab-ludo">🎲 Ludo</button>
-      </div>
-
-      <!-- MUSIC TAB -->
-      <div id="tab-music" class="session-tab-content active" style="display:block;">
-      <div class="marquee-container">
-        <span class="marquee-text" style="color:var(--accent-red); font-weight:bold;">✨ WELCOME TO AUXDROP ✨ ADD SONGS TO THE QUEUE AND UPVOTE YOUR FAVORITES! ✨ </span>
-        <span class="marquee-text" style="color:var(--accent-yellow); font-weight:bold;">🔥 THE DEMOCRATIC AUX CORD 🔥 </span>
-        <span class="marquee-text" style="color:var(--accent-blue); font-weight:bold;">🎵 NO BAD VIBES ALLOWED 🎵 </span>
-      </div>
-      <div id="now-playing-container"></div>
-      <div class="session-split-layout" style="display:flex; gap:16px; flex-wrap:wrap;">
-        <section class="queue-section" style="flex:2; min-width:300px;">
-          <div class="queue-header" style="background: repeating-linear-gradient(45deg, #ffff00, #ffff00 10px, #000000 10px, #000000 20px);">
-            <h2 class="queue-title" style="background:#000; color:#fff; padding:2px 6px;">Queue</h2>
-            <div style="display:flex; gap:6px;">
-              <button class="queue-add-btn" id="btn-open-search">
-                <span>+</span> Add Song
+    
+    <main class="dashboard-grid">
+      <!-- LEFT COLUMN: Music Engine -->
+      <div class="main-column" style="display:flex; flex-direction:column; gap:24px;">
+        <div id="now-playing-container"></div>
+        
+        <div class="queue-container">
+          <div class="queue-header">
+            <h2 class="display" style="font-size: 1.5rem; letter-spacing: 2px;">LIVE QUEUE</h2>
+            <div style="display:flex; gap:12px;">
+              <button class="btn" id="btn-open-search" style="padding: 8px 16px; font-size: 0.9rem;">
+                <span style="color:var(--neon-cyan)">+</span> ADD TRACK
               </button>
-              <button class="queue-add-btn" id="btn-open-yt" style="background:#FF0000; border-color:#FF0000; color:#FFF;">
-                ▶️ YT Playlist
+              <button class="btn" id="btn-open-yt" style="padding: 8px 16px; font-size: 0.9rem; border-color:var(--neon-pink);">
+                <span style="color:var(--neon-pink)">▶</span> IMPORT
               </button>
             </div>
           </div>
           <div id="queue-carousel-container"></div>
-        </section>
-        <section class="chat-section" style="flex:1; min-width:280px; display:flex; flex-direction:column; background:var(--bg-primary); border:var(--border-outset); border-color:var(--color-outset);">
-          <div class="chat-header" style="background: linear-gradient(to right, var(--title-bar), var(--title-bar-end)); color: white; padding: 8px;">
-            <h2 class="chat-title" style="font-family: var(--font-heading); margin: 0; font-size: 1.2rem; text-transform: uppercase;">Chat</h2>
-          </div>
-          <div id="chat-messages" style="flex:1; height:300px; overflow-y:auto; background:white; border:var(--border-inset); border-color:var(--color-inset); margin:var(--space-2); padding:var(--space-2); display:flex; flex-direction:column; gap:4px;">
-            <div style="color:var(--text-muted); text-align:center; font-style:italic; font-size:0.9rem;">Welcome to the chat!</div>
-          </div>
-          <div class="chat-input-container" style="display:flex; padding:var(--space-2); gap:var(--space-2); padding-top:0;">
-            <input type="text" id="chat-input" class="input" style="margin-bottom:0; flex:1;" placeholder="Say something..." maxlength="200" />
-            <button id="btn-send-chat" class="btn btn-primary" style="padding:0 var(--space-3);">Send</button>
-          </div>
-        </section>
-      </div>
-      </div> <!-- End Music Tab -->
-
-      <!-- SNAKES & LADDERS TAB -->
-      <div id="tab-snakes" class="session-tab-content" style="display:none; text-align:center; padding: 2rem;">
-        <h2 style="font-family: var(--font-heading); color: var(--accent-green); font-size: 2rem;">🐍 Snakes & Ladders 🪜</h2>
-        <div style="background: white; border: var(--border-inset); border-color: var(--color-inset); width: 80%; max-width: 600px; height: 400px; margin: 1rem auto; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: #666;">
-          [ Game Board Coming Soon ]
         </div>
-        <p>Race to square 100! But watch out for the snakes.</p>
-        <button class="btn btn-primary" style="font-size: 1.2rem; margin-top: 1rem;" disabled>Roll Dice</button>
+        
+        <!-- Game Widgets Container -->
+        <div id="game-widget-container" style="display:none; margin-top:24px; border:var(--brutal-border); background:var(--bg-surface); padding:24px;">
+           <h2 class="display" style="font-size:1.5rem; margin-bottom:16px;">GAME ARENA</h2>
+           <div id="tab-ludo"></div>
+           <div id="tab-snakes" style="display:none;"></div>
+        </div>
       </div>
-
-      <!-- LUDO TAB -->
-      <div id="tab-ludo" class="session-tab-content" style="display:none; padding: 2rem;">
-        <!-- Ludo Board gets rendered here -->
+      
+      <!-- RIGHT COLUMN: Social & Chat -->
+      <div class="social-panel">
+        <div style="padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+          <h2 class="display" style="font-size: 1.2rem;">PARTY CHAT</h2>
+          <span class="mono" style="font-size: 0.8rem; color:var(--neon-cyan);">LIVE</span>
+        </div>
+        
+        <div id="chat-messages" class="chat-messages">
+          <div class="chat-message system">Welcome to the VIP room. Type a message to start interacting!</div>
+        </div>
+        
+        <div class="chat-input-wrap">
+          <input type="text" id="chat-input" class="input" placeholder="Type a message..." maxlength="200" style="padding:12px;">
+          <button id="btn-send-chat" class="btn btn-primary" style="padding: 12px 24px;">SEND</button>
+        </div>
       </div>
-
     </main>
+    
     <div id="player-controls-container"></div>
   `;
 
@@ -117,8 +104,11 @@ export async function render() {
   renderQueueCarousel(state.queue || [], state);
   renderPlayerControls(state);
   
-  // Render Board Games
+  // Game Widgets setup
   renderLudoBoard(document.getElementById('tab-ludo'));
+  if (state.initialTab === 'ludo' || state.initialTab === 'snakes') {
+      document.getElementById('game-widget-container').style.display = 'block';
+  }
 
   attachSessionEvents();
   setupSocketListeners();
@@ -133,42 +123,20 @@ export async function render() {
           loadSongWithSync(state.nowPlaying, state.playStartedAt, state.currentPosition);
         }
       },
-      // Only the host notifies the server when a song ends
       state.isHost ? handleSongEnd : null
     );
   } else if (state.nowPlaying) {
-    // Player already initialized (e.g. after rejoin) — load with sync
     loadSongWithSync(state.nowPlaying, state.playStartedAt, state.currentPosition);
   }
 
-  // Wire host playback-position broadcast (host only, throttled)
   setupHostPositionTick();
-
-  // Request full queue state from server
   getQueue(state.code);
 
-  // Switch to initial tab if provided
-  if (state.initialTab) {
-    switchTab('tab-' + state.initialTab);
-    
-    // Auto-join if it's a dedicated ludo party
-    if (state.initialTab === 'ludo') {
-      setTimeout(() => {
-        ludoJoin(state.code).catch(err => console.error("Auto-join Ludo failed:", err));
-      }, 500); // slight delay to let socket establish fully
-    }
+  if (state.initialTab === 'ludo') {
+    setTimeout(() => {
+      ludoJoin(state.code).catch(err => console.error("Auto-join Ludo failed:", err));
+    }, 500);
   }
-}
-
-function switchTab(targetId) {
-  document.querySelectorAll('.session-tab-content').forEach(el => el.style.display = 'none');
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'btn-primary'));
-  
-  const targetEl = document.getElementById(targetId);
-  if (targetEl) targetEl.style.display = 'block';
-  
-  const btnEl = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
-  if (btnEl) btnEl.classList.add('active', 'btn-primary');
 }
 
 function attachSessionEvents() {
@@ -187,19 +155,23 @@ function attachSessionEvents() {
     if (!text) return;
     sendChatMessage(App.state.code, text);
     chatInput.value = '';
+    triggerEnergyBurst();
   };
   
   btnSendChat?.addEventListener('click', handleSendChat);
   chatInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleSendChat();
   });
+}
 
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      switchTab(e.target.getAttribute('data-target'));
-    });
-  });
+function triggerEnergyBurst() {
+  // A small visual burst when users interact (chat, vote, etc.)
+  const visualizer = document.getElementById('energy-visualizer');
+  if (!visualizer) return;
+  visualizer.style.boxShadow = 'inset 0 0 150px rgba(0, 209, 255, 0.3)';
+  setTimeout(() => {
+    visualizer.style.boxShadow = 'none';
+  }, 300);
 }
 
 function handleAddSong(song) {
@@ -211,6 +183,7 @@ function handleAddSong(song) {
     thumbnail: song.thumbnail,
     duration: song.duration || 0,
   });
+  triggerEnergyBurst();
 }
 
 function handleSongEnd(videoId) {
@@ -220,30 +193,21 @@ function handleSongEnd(videoId) {
   }
 }
 
-function updateAlbumBackground(song) {
-  const bgElement = document.getElementById('album-gradient-bg');
-  if (!bgElement) return;
-  if (song && song.thumbnail) {
-    bgElement.style.backgroundImage = 'url(' + song.thumbnail + ')';
-  } else {
-    bgElement.style.backgroundImage = 'none';
-  }
-}
-
 function appendChatMessage(message) {
   const container = document.getElementById('chat-messages');
   if (!container) return;
   
   const msgEl = document.createElement('div');
-  msgEl.className = 'chat-message';
-  msgEl.style.cssText = 'padding: 4px; border-bottom: 1px dotted #ccc; word-wrap: break-word; font-size: 0.95rem;';
+  msgEl.className = 'chat-message animate-fadeInUp';
   
   const isMe = message.userId === App.state.userId;
-  const color = isMe ? 'var(--accent-blue)' : 'var(--title-bar)';
+  const color = isMe ? 'var(--neon-cyan)' : 'var(--neon-pink)';
   
   msgEl.innerHTML = `
-    <strong style="color:${color}; font-family:var(--font-heading); margin-right:4px;">${message.userName}:</strong>
-    <span style="font-family:var(--font-body);">${message.text}</span>
+    <div style="font-family:var(--font-display); font-size: 0.8rem; color:${color}; margin-bottom: 4px; letter-spacing:1px;">
+      ${message.userName}
+    </div>
+    <div style="font-family:var(--font-body);">${message.text}</div>
   `;
   
   container.appendChild(msgEl);
@@ -257,7 +221,7 @@ function setupSocketListeners() {
     user_joined: (data) => {
       App.state.users = data.users;
       updateUserBubbles(data.users, App.state);
-      showNotification('join', (data.userName || 'Someone') + ' joined the session');
+      showNotification('join', (data.userName || 'Someone') + ' entered the arena');
     },
 
     user_left: (data) => {
@@ -267,7 +231,7 @@ function setupSocketListeners() {
         App.state.hostId = data.newHostId;
         App.state.isHost = data.newHostId === App.state.userId;
         if (App.state.isHost) {
-          showNotification('info', 'You are now the host');
+          showNotification('info', 'YOU ARE NOW THE HOST');
         }
       }
     },
@@ -275,34 +239,29 @@ function setupSocketListeners() {
     queue_updated: (data) => {
       App.state.queue = data.queue;
       updateQueueCarousel(data.queue, App.state);
+      triggerEnergyBurst();
     },
 
     vote_confirmed: (data) => {
       App.state.queue = data.queue;
       updateQueueCarousel(data.queue, App.state);
+      triggerEnergyBurst();
     },
 
     now_playing: (data) => {
-      console.log('Now playing event received:', data.song ? data.song.title : 'nothing', 'playerReady:', App.state.playerReady);
       App.state.nowPlaying = data.song;
       App.state.playStartedAt = data.playStartedAt || (data.song ? Date.now() : null);
-      App.state.currentPosition = null; // reset on song change
+      App.state.currentPosition = null;
 
-      updateAlbumBackground(data.song);
       renderNowPlaying(data.song, App.state);
 
-      if (data.song) {
-        if (App.state.playerReady) {
-          loadSongWithSync(data.song, App.state.playStartedAt, null);
-        } else {
-          console.log('Player not ready yet, song will play when ready');
-        }
+      if (data.song && App.state.playerReady) {
+        loadSongWithSync(data.song, App.state.playStartedAt, null);
       }
       renderPlayerControls(App.state);
     },
 
     position_sync: (data) => {
-      // Guests adjust to host playback if drift > threshold
       if (App.state.isHost) return;
       const player = getPlayer();
       if (!player || !player.getCurrentTime) return;
@@ -314,7 +273,6 @@ function setupSocketListeners() {
       const actual = player.getCurrentTime();
       const drift = Math.abs(expected - actual);
       if (drift > DRIFT_THRESHOLD_S) {
-        console.log(`[sync] drift ${drift.toFixed(2)}s — seeking to ${expected.toFixed(2)}s`);
         player.seekTo(expected, true);
       }
       App.state.currentPosition = {
@@ -337,24 +295,23 @@ function setupSocketListeners() {
     song_skipped: (data) => {
       App.state.queue = data.queue;
       updateQueueCarousel(data.queue, App.state);
-      showNotification('skip', 'A song was democratically skipped!');
+      showNotification('skip', 'TRACK VETOED BY DEMOCRACY!');
     },
 
     host_skip: () => {
-      showNotification('info', 'Host skipped the current track');
+      showNotification('info', 'HOST EXERCISED OVERRIDE');
     },
 
     queue_empty: () => {
       App.state.nowPlaying = null;
-      updateAlbumBackground(null);
       renderNowPlaying(null, App.state);
       renderPlayerControls(App.state);
-      showNotification('info', 'Queue is empty — add some songs!');
+      showNotification('info', 'QUEUE DEPLETED');
     },
 
     session_ended: (data) => {
       openStatsModal(data.stats);
-      showNotification('info', 'Session has ended');
+      showNotification('info', 'SESSION TERMINATED');
     },
 
     error: (data) => {
@@ -374,8 +331,6 @@ function setupSocketListeners() {
     on(event, handler);
     eventHandlers.push({ event, handler });
   }
-
-  window.__sessionListeners = listeners;
 }
 
 function cleanupListeners() {
