@@ -267,9 +267,19 @@
 }
 
 .ludo-board {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(15, 1fr);
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
+  aspect-ratio: 1;
   background: linear-gradient(45deg, #1a1a2e 25%, #0f3460 25%, #0f3460 50%, #1a1a2e 50%, #1a1a2e 75%, #0f3460 75%, #0f3460);
   background-size: 20px 20px;
-  background-position: 0 0, 10px 10px;
+  border: 4px solid #00ffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 /* Status and Message Styling */
