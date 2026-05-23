@@ -288,39 +288,7 @@
   font-weight: bold;
 }
 
-/* Button Styling */
-.btn {
-  background: linear-gradient(135deg, #00ffff 0%, #00aaaa 100%);
-  color: #000;
-  border: 2px solid rgba(0, 200, 200, 0.5);
-  border-radius: 6px;
-  font-weight: bold;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(0, 255, 255, 0.5);
-}
-
-.btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 10px rgba(0, 255, 255, 0.3);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #ff6b6b 0%, #cc0000 100%);
-  color: white;
-  border-color: rgba(255, 107, 107, 0.5);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-}
-
-.btn-primary:hover {
-  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.5);
-}
+/* Ludo buttons use global .btn styles now */
 
 /* Player List Styling */
 #ludo-players {
